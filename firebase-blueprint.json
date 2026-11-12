@@ -1,0 +1,146 @@
+{
+  "entities": {
+    "UserPreference": {
+      "title": "UserPreference",
+      "description": "Stores non-PII user workspace preferences synced across devices in Firestore.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The Firebase Auth UID of the owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Public display name of the botanist.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "theme": {
+          "type": "string",
+          "description": "Preferred UI theme mode.",
+          "enum": ["dark", "light"]
+        },
+        "preferredLanguage": {
+          "type": "string",
+          "description": "Preferred voice and chat language.",
+          "enum": ["en", "ta"]
+        },
+        "preferredModel": {
+          "type": "string",
+          "description": "Default Gemini model selected in multi-turn chat.",
+          "enum": ["gemini-4-argon", "gemini-4-carbon", "gemini-3.8-flash", "gemini-3.1-flash-lite"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Immutable creation server timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": ["userId", "displayName", "theme", "preferredLanguage", "preferredModel", "createdAt", "updatedAt"]
+    },
+    "BotanicalNote": {
+      "title": "BotanicalNote",
+      "description": "Stores real-time Firestore-synced field observations and AI search-grounded notes for a user's plants.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The Firebase Auth UID of the note author.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "plantName": {
+          "type": "string",
+          "description": "Name of the plant specimen.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "noteText": {
+          "type": "string",
+          "description": "Detailed botanical observation or care note.",
+          "minLength": 1,
+          "maxLength": 1000
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the botanical field note.",
+          "enum": ["Observation", "Search Grounding", "Live Voice Summary", "Care Log"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Immutable creation server timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": ["userId", "plantName", "noteText", "category", "createdAt", "updatedAt"]
+    },
+    "VirtualGardenLayout": {
+      "title": "VirtualGardenLayout",
+      "description": "Stores saved 3D Virtual Garden spatial scene snapshots for a user.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The Firebase Auth UID of the garden owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Name of the 3D garden layout snapshot.",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "lightingPreset": {
+          "type": "string",
+          "description": "Active lighting preset in the 3D conservatory.",
+          "enum": ["golden", "daylight", "bioluminescent"]
+        },
+        "specimenCount": {
+          "type": "integer",
+          "description": "Number of 3D plant specimens in the scene."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Immutable creation server timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of last update."
+        }
+      },
+      "required": ["userId", "title", "lightingPreset", "specimenCount", "createdAt", "updatedAt"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserPreference" },
+      "description": "Stores per-user workspace preferences keyed by the authenticated user's UID."
+    },
+    "/botanicalNotes/{noteId}": {
+      "schema": { "$ref": "#/entities/BotanicalNote" },
+      "description": "Stores user-owned botanical field notes and AI research logs."
+    },
+    "/gardenLayouts/{layoutId}": {
+      "schema": { "$ref": "#/entities/VirtualGardenLayout" },
+      "description": "Stores user-owned 3D Virtual Garden layout snapshots."
+    }
+  }
+}

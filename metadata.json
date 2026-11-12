@@ -1,0 +1,6 @@
+{
+  "name": "MYPLANTCARE — Intelligent Plant Care Ecosystem",
+  "description": "Grow Better. Care Smarter. Live Greener. An AI-powered botanical intelligence platform with 3D Virtual Garden, GREENY Voice AI Companion, Disease Diagnostics, Soil & Water Intelligence, and Predictive Plant Care.",
+  "requestFramePermissions": ["camera", "microphone", "geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
