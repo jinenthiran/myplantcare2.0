@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
+import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut, User } from 'firebase/auth';
 import {
   getFirestore,
   doc,
@@ -18,9 +18,97 @@ import {
 import firebaseConfig from '../../firebase-applet-config.json';
 
 const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
+const firestoreDatabaseId = (firebaseConfig as { firestoreDatabaseId?: string }).firestoreDatabaseId;
+export const db = firestoreDatabaseId ? getFirestore(app, firestoreDatabaseId) : getFirestore(app);
 export const auth = getAuth(app);
 export const googleAuthProvider = new GoogleAuthProvider();
+
+export const WORKSPACE_SCOPES = [
+  'https://www.googleapis.com/auth/chat.spaces',
+  'https://www.googleapis.com/auth/chat.spaces.create',
+  'https://www.googleapis.com/auth/chat.spaces.readonly',
+  'https://www.googleapis.com/auth/chat.messages',
+  'https://www.googleapis.com/auth/chat.messages.create',
+  'https://www.googleapis.com/auth/chat.messages.reactions',
+  'https://www.googleapis.com/auth/chat.messages.reactions.create',
+  'https://www.googleapis.com/auth/chat.messages.reactions.readonly',
+  'https://www.googleapis.com/auth/chat.messages.readonly',
+  'https://www.googleapis.com/auth/chat.memberships',
+  'https://www.googleapis.com/auth/chat.memberships.readonly',
+  'https://www.googleapis.com/auth/chat.delete',
+  'https://www.googleapis.com/auth/chat.users.readstate',
+  'https://www.googleapis.com/auth/chat.users.readstate.readonly',
+  'https://www.googleapis.com/auth/chat.users.spacesettings',
+  'https://www.googleapis.com/auth/documents',
+  'https://www.googleapis.com/auth/documents.readonly',
+  'https://www.googleapis.com/auth/drive',
+  'https://www.googleapis.com/auth/drive.file',
+  'https://www.googleapis.com/auth/drive.readonly',
+];
+
+WORKSPACE_SCOPES.forEach((scope) => googleAuthProvider.addScope(scope));
+
+// OAuth access token is cached strictly in memory (never stored in localStorage or sessionStorage)
+let cachedAccessToken: string | null = null;
+const tokenListeners = new Set<(token: string | null) => void>();
+
+function notifyTokenListeners(token: string | null) {
+  tokenListeners.forEach((listener) => listener(token));
+}
+
+export function subscribeWorkspaceToken(listener: (token: string | null) => void): () => void {
+  tokenListeners.add(listener);
+  return () => {
+    tokenListeners.delete(listener);
+  };
+}
+
+export async function googleSignIn(): Promise<string | null> {
+  googleAuthProvider.setCustomParameters({ prompt: 'consent' });
+  const result = await signInWithPopup(auth, googleAuthProvider);
+  const credential = GoogleAuthProvider.credentialFromResult(result);
+  cachedAccessToken = credential?.accessToken ?? null;
+  notifyTokenListeners(cachedAccessToken);
+  return cachedAccessToken;
+}
+
+export async function getAccessToken(): Promise<string> {
+  if (cachedAccessToken) return cachedAccessToken;
+  const token = await googleSignIn();
+  if (!token) throw new Error('Failed to retrieve Google Workspace access token.');
+  return token;
+}
+
+export function getCachedAccessToken(): string | null {
+  return cachedAccessToken;
+}
+
+export function clearCachedAccessToken(): void {
+  cachedAccessToken = null;
+  notifyTokenListeners(null);
+}
+
+export function initAuth(callback: (state: { user: User | null; needsAuth: boolean }) => void): Unsubscribe {
+  return onAuthStateChanged(auth, (user) => {
+    if (!user) {
+      cachedAccessToken = null;
+      notifyTokenListeners(null);
+      callback({ user: null, needsAuth: true });
+      return;
+    }
+    callback({ user, needsAuth: !cachedAccessToken });
+  });
+}
+
+export async function logout(): Promise<void> {
+  cachedAccessToken = null;
+  notifyTokenListeners(null);
+  await signOut(auth);
+}
+
+export function getFirebaseProjectId(): string {
+  return firebaseConfig.projectId || 'big-bay-w01dl';
+}
 
 export enum OperationType {
   CREATE = 'create',
@@ -95,7 +183,7 @@ export async function syncUserPreferencesToFirestore(params: {
   displayName: string;
   theme: 'dark' | 'light';
   preferredLanguage: 'en' | 'ta';
-  preferredModel: 'gemini-4-argon' | 'gemini-4-carbon' | 'gemini-3.8-flash' | 'gemini-3.1-flash-lite';
+  preferredModel: 'gemini-4-hydrogen' | 'gemini-3.1-flash-lite';
 }) {
   if (!auth.currentUser || auth.currentUser.uid !== params.userId) return;
   const safeUid = sanitizeSafeId(params.userId);
@@ -105,8 +193,8 @@ export async function syncUserPreferencesToFirestore(params: {
   const safeDisplayName = (params.displayName || 'Botanical Explorer').trim().slice(0, 80) || 'Botanical Explorer';
   const safeTheme = params.theme === 'light' ? 'light' : 'dark';
   const safeLang = params.preferredLanguage === 'ta' ? 'ta' : 'en';
-  const validModels = ['gemini-4-argon', 'gemini-4-carbon', 'gemini-3.8-flash', 'gemini-3.1-flash-lite'] as const;
-  const safeModel = validModels.includes(params.preferredModel) ? params.preferredModel : 'gemini-3.8-flash';
+  const validModels = ['gemini-4-hydrogen', 'gemini-3.1-flash-lite'] as const;
+  const safeModel = validModels.includes(params.preferredModel) ? params.preferredModel : 'gemini-4-hydrogen';
 
   try {
     const snap = await getDoc(userRef);
@@ -244,3 +332,44 @@ export function subscribeToGardenLayouts(
     }
   );
 }
+
+export async function saveImageCorrectionAuditToFirestore(params: {
+  userId: string;
+  plantId: string;
+  scientificName: string;
+  actionType: 'flagged' | 'verified_override' | 'reverted';
+  source: string;
+  license: string;
+  notes: string;
+}) {
+  if (!auth.currentUser || auth.currentUser.uid !== params.userId) return null;
+  const safeUid = sanitizeSafeId(params.userId);
+  const safePlantId = sanitizeSafeId(params.plantId);
+  const auditId = sanitizeSafeId(`audit_${safePlantId}_${Date.now()}`);
+  const path = `imageCorrectionAudits/${auditId}`;
+
+  const safeScientific = (params.scientificName || 'Botanical Taxon').trim().slice(0, 140) || 'Botanical Taxon';
+  const allowedActions = ['flagged', 'verified_override', 'reverted'] as const;
+  const safeAction = allowedActions.includes(params.actionType) ? params.actionType : 'flagged';
+  const safeSource = (params.source || 'Wikimedia Commons').trim().slice(0, 120) || 'Wikimedia Commons';
+  const safeLicense = (params.license || 'CC BY-SA 4.0').trim().slice(0, 80) || 'CC BY-SA 4.0';
+  const safeNotes = (params.notes || 'Curator image record update.').trim().slice(0, 500) || 'Curator image record update.';
+
+  try {
+    await setDoc(doc(db, 'imageCorrectionAudits', auditId), {
+      userId: safeUid,
+      plantId: safePlantId,
+      scientificName: safeScientific,
+      actionType: safeAction,
+      source: safeSource,
+      license: safeLicense,
+      notes: safeNotes,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+    });
+    return auditId;
+  } catch (error) {
+    handleFirestoreError(error, OperationType.CREATE, path);
+  }
+}
+

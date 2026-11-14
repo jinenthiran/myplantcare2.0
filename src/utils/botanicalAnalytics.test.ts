@@ -4,6 +4,7 @@ import {
   calculateWateringIntelligence,
   calculateEcoImpactScore,
   evaluateSoilCondition,
+  buildPlantImageHistory,
 } from './botanicalAnalytics';
 
 test('calculateWateringIntelligence detects overwatering accurately', () => {
@@ -63,3 +64,26 @@ test('evaluateSoilCondition identifies pH and N-P-K imbalances', () => {
   assert.equal(res.imbalances.length, 2);
   assert.ok(res.soilHealthScore < 75);
 });
+
+test('buildPlantImageHistory aggregates unique frames from gallery, diagnoses, and current photo', () => {
+  const history = buildPlantImageHistory(
+    {
+      id: 7,
+      name: 'Krishna Tulsi',
+      imageUrl: '/images/tulsi-current.webp',
+      photoGalleryJson: JSON.stringify(['/images/tulsi-day1.webp', { url: '/images/tulsi-current.webp' }]),
+    },
+    [
+      { plantId: 7, plantName: 'Krishna Tulsi', imageUrl: '/images/tulsi-scan-new.webp' },
+      { plantId: 7, plantName: 'Krishna Tulsi', imageUrl: '/images/tulsi-scan-old.webp' },
+      { plantId: 99, plantName: 'Other Plant', imageUrl: '/images/other.webp' },
+    ]
+  );
+  assert.deepEqual(history, [
+    '/images/tulsi-day1.webp',
+    '/images/tulsi-current.webp',
+    '/images/tulsi-scan-old.webp',
+    '/images/tulsi-scan-new.webp',
+  ]);
+});
+

@@ -1,4 +1,5 @@
 import React from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import {
   Mic,
   MicOff,
@@ -14,6 +15,7 @@ import {
   ScanLine,
   Sparkles,
   AlertTriangle,
+  Leaf,
 } from 'lucide-react';
 import { GreenyChatMessage, NavigationGuideMatch, ResponseSourceCategory } from './GreenyTypes';
 import { GreenyNavigationGuideCard } from './GreenyNavigationGuide';
@@ -25,6 +27,7 @@ interface GreenyConversationProps {
   onSendMessage: (overrideText?: string) => void;
   onStartVoiceInput: () => void;
   isListening: boolean;
+  isThinking?: boolean;
   voiceEnabled: boolean;
   onToggleVoice: () => void;
   onReplayLastVoice: () => void;
@@ -37,27 +40,32 @@ interface GreenyConversationProps {
 
 const SOURCE_BADGE_MAP: Record<
   ResponseSourceCategory,
-  { label: string; badgeClass: string }
+  { label: string; badgeClass: string; chipClass: string }
 > = {
   GEMINI_AI: {
     label: 'Gemini AI Response',
-    badgeClass: 'text-[#00C878]',
+    badgeClass: 'text-[#174C38] dark:text-[#00D69A]',
+    chipClass: 'bg-[#00D69A]/12 border-[#00D69A]/35',
   },
   SAVED_GARDEN_MEMORY: {
     label: 'Saved Garden Information',
-    badgeClass: 'text-[#B7F76B]',
+    badgeClass: 'text-[#10251D] dark:text-[#C7F36B]',
+    chipClass: 'bg-[#C7F36B]/22 dark:bg-[#174C38]/55 border-[#174C38]/25 dark:border-[#C7F36B]/30',
   },
   GENERAL_PLANT_CARE: {
     label: 'General Plant Care Advice',
-    badgeClass: 'text-[#A7F3D0]',
+    badgeClass: 'text-[#174C38] dark:text-[#56C7C0]',
+    chipClass: 'bg-[#56C7C0]/14 border-[#56C7C0]/30',
   },
   WEBSITE_NAVIGATION_GUIDE: {
     label: 'Website Navigation Guide',
-    badgeClass: 'text-[#D4B56A]',
+    badgeClass: 'text-[#8C5A2B] dark:text-[#F5CA62]',
+    chipClass: 'bg-[#F5CA62]/20 border-[#F5CA62]/45',
   },
   SERVICE_ERROR: {
     label: 'AI Service Temporarily Unavailable (HTTP 503)',
-    badgeClass: 'text-amber-400',
+    badgeClass: 'text-[#9B3B28] dark:text-[#FF806B]',
+    chipClass: 'bg-[#FF806B]/18 border-[#FF806B]/45',
   },
 };
 
@@ -68,6 +76,7 @@ export const GreenyConversation: React.FC<GreenyConversationProps> = ({
   onSendMessage,
   onStartVoiceInput,
   isListening,
+  isThinking = false,
   voiceEnabled,
   onToggleVoice,
   onReplayLastVoice,
@@ -77,6 +86,8 @@ export const GreenyConversation: React.FC<GreenyConversationProps> = ({
   threadEndRef,
   compact = false,
 }) => {
+  const prefersReducedMotion = useReducedMotion();
+
   const handleQuickAction = (action: 'scan' | 'garden' | 'water' | 'identify' | 'ask') => {
     if (action === 'scan') {
       if (onNavigate) {
@@ -120,13 +131,13 @@ export const GreenyConversation: React.FC<GreenyConversationProps> = ({
   };
 
   return (
-    <div className="flex flex-col flex-1 min-h-0">
-      {/* Quick Action Bar (Part 7: Scan My Plant, Check My Garden, Watering Help, Identify a Plant, Ask GREENY) */}
-      <div className="px-3.5 py-2.5 bg-slate-100/80 dark:bg-[#0B2419] border-b border-slate-200 dark:border-[#123D2A] flex items-center gap-1.5 overflow-x-auto">
+    <div className="flex flex-col flex-1 min-h-0 bg-[#FAF7EE] dark:bg-[#10251D]">
+      {/* Quick Action Bar */}
+      <div className="px-3.5 py-2.5 bg-[#FFFFFF] dark:bg-[#153026] border-b border-[#174C38]/12 dark:border-[#00D69A]/18 flex items-center gap-1.5 overflow-x-auto">
         <button
           type="button"
           onClick={() => handleQuickAction('scan')}
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#00C878] text-[#071B12] text-[11px] font-bold hover:bg-[#B7F76B] transition-colors whitespace-nowrap shrink-0"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#174C38] dark:bg-[#00D69A] text-[#FFFFFF] dark:text-[#10251D] text-[11px] font-bold hover:brightness-110 transition-all whitespace-nowrap shrink-0 cursor-pointer shadow-xs"
         >
           <Stethoscope className="w-3 h-3" />
           Scan My Plant
@@ -134,74 +145,84 @@ export const GreenyConversation: React.FC<GreenyConversationProps> = ({
         <button
           type="button"
           onClick={() => handleQuickAction('garden')}
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#123D2A] text-slate-800 dark:text-[#F7F9F2] border border-slate-200 dark:border-[#00C878]/30 text-[11px] font-semibold hover:border-[#00C878] transition-colors whitespace-nowrap shrink-0"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#FAF7EE] dark:bg-[#10251D] text-[#10251D] dark:text-[#FAF7EE] border border-[#174C38]/15 dark:border-[#00D69A]/25 text-[11px] font-semibold hover:border-[#00D69A] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
         >
-          <Sprout className="w-3 h-3 text-[#00C878]" />
+          <Sprout className="w-3 h-3 text-[#174C38] dark:text-[#00D69A]" />
           Check My Garden
         </button>
         <button
           type="button"
           onClick={() => handleQuickAction('water')}
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#123D2A] text-slate-800 dark:text-[#F7F9F2] border border-slate-200 dark:border-[#00C878]/30 text-[11px] font-semibold hover:border-[#00C878] transition-colors whitespace-nowrap shrink-0"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#FAF7EE] dark:bg-[#10251D] text-[#10251D] dark:text-[#FAF7EE] border border-[#174C38]/15 dark:border-[#00D69A]/25 text-[11px] font-semibold hover:border-[#00D69A] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
         >
-          <Droplets className="w-3 h-3 text-[#00C878]" />
+          <Droplets className="w-3 h-3 text-[#56C7C0]" />
           Watering Help
         </button>
         <button
           type="button"
           onClick={() => handleQuickAction('identify')}
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#123D2A] text-slate-800 dark:text-[#F7F9F2] border border-slate-200 dark:border-[#00C878]/30 text-[11px] font-semibold hover:border-[#00C878] transition-colors whitespace-nowrap shrink-0"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#FAF7EE] dark:bg-[#10251D] text-[#10251D] dark:text-[#FAF7EE] border border-[#174C38]/15 dark:border-[#00D69A]/25 text-[11px] font-semibold hover:border-[#00D69A] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
         >
-          <ScanLine className="w-3 h-3 text-[#00C878]" />
+          <ScanLine className="w-3 h-3 text-[#174C38] dark:text-[#00D69A]" />
           Identify a Plant
         </button>
         <button
           type="button"
           onClick={() => handleQuickAction('ask')}
-          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-[#123D2A] text-slate-800 dark:text-[#F7F9F2] border border-slate-200 dark:border-[#00C878]/30 text-[11px] font-semibold hover:border-[#00C878] transition-colors whitespace-nowrap shrink-0"
+          className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#FAF7EE] dark:bg-[#10251D] text-[#10251D] dark:text-[#FAF7EE] border border-[#174C38]/15 dark:border-[#00D69A]/25 text-[11px] font-semibold hover:border-[#00D69A] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
         >
-          <Sparkles className="w-3 h-3 text-[#B7F76B]" />
+          <Sparkles className="w-3 h-3 text-[#F5CA62]" />
           Ask GREENY
         </button>
       </div>
 
       {/* Scrollable Conversation Area */}
       <div
-        className={`flex-1 overflow-y-auto p-3.5 space-y-3 ${
-          compact ? 'max-h-[260px]' : 'max-h-[410px]'
+        className={`flex-1 overflow-y-auto p-3.5 sm:p-4 space-y-3.5 ${
+          compact ? 'max-h-[265px]' : 'max-h-[430px]'
         }`}
       >
         {messages.map((m) => {
           const sourceMeta = SOURCE_BADGE_MAP[m.sourceCategory] || SOURCE_BADGE_MAP.GEMINI_AI;
+          const isUser = m.sender === 'user';
+          const isError = m.sourceCategory === 'SERVICE_ERROR';
+
           return (
-            <div key={m.id} className="space-y-2">
+            <motion.div
+              key={m.id}
+              initial={prefersReducedMotion ? { opacity: 1 } : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: prefersReducedMotion ? 0 : 0.22 }}
+              className="space-y-2"
+            >
               <div
-                className={`p-3.5 rounded-2xl text-xs leading-relaxed ${
-                  m.sender === 'user'
-                    ? 'bg-[#00C878] text-[#071B12] font-semibold ml-8'
-                    : m.sourceCategory === 'SERVICE_ERROR'
-                    ? 'bg-amber-950/60 text-amber-100 border border-amber-400/50 mr-3'
-                    : 'bg-slate-50 dark:bg-[#123D2A]/80 text-slate-800 dark:text-[#F7F9F2] border border-slate-200 dark:border-[#00C878]/25 mr-3'
+                className={`p-3.5 sm:p-4 rounded-2xl text-xs leading-relaxed transition-colors ${
+                  isUser
+                    ? 'bg-gradient-to-br from-[#174C38] to-[#10251D] dark:from-[#00D69A] dark:to-[#C7F36B] text-[#FFFFFF] dark:text-[#10251D] font-semibold ml-8 sm:ml-14 rounded-br-md shadow-sm'
+                    : isError
+                    ? 'bg-[#FF806B]/18 text-[#7A2F1E] dark:text-[#FAF7EE] border border-[#FF806B]/50 mr-2 sm:mr-6 rounded-bl-md'
+                    : 'bg-[#FFFFFF] dark:bg-[#153026] text-[#10251D] dark:text-[#FAF7EE] border border-[#174C38]/14 dark:border-[#00D69A]/20 mr-2 sm:mr-6 rounded-bl-md shadow-xs'
                 }`}
               >
                 {/* Header Metadata with Explicit Response Source Classification */}
-                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] mb-1.5 opacity-85">
-                  <div className="flex items-center gap-1.5 font-mono">
-                    {m.sender === 'user' ? (
-                      <span className="font-bold">You</span>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] mb-2">
+                  <div className="flex flex-wrap items-center gap-1.5 font-mono">
+                    {isUser ? (
+                      <span className="font-bold opacity-95">You</span>
                     ) : (
                       <>
-                        <span className="font-bold text-[#00C878]">GREENY</span>
-                        <span aria-hidden="true">·</span>
-                        <span className={`font-semibold ${sourceMeta.badgeClass}`}>{sourceMeta.label}</span>
+                        <span className="inline-flex items-center gap-1 font-bold text-[#10251D] dark:text-[#00D69A]">
+                          <Leaf className="w-3 h-3 text-[#174C38] dark:text-[#00D69A]" />
+                          GREENY
+                        </span>
+                        <span className={`px-2 py-0.5 rounded-md border text-[10px] font-semibold ${sourceMeta.chipClass} ${sourceMeta.badgeClass}`}>
+                          {sourceMeta.label}
+                        </span>
                         {m.resolvedModel && m.sourceCategory === 'GEMINI_AI' && (
-                          <>
-                            <span aria-hidden="true">·</span>
-                            <span>
-                              {m.resolvedModel}
-                              {m.usedBackupModel ? ' (Backup Failover)' : ''}
-                            </span>
-                          </>
+                          <span className="text-[10px] text-[#10251D]/60 dark:text-[#B6CDB4]">
+                            · {m.resolvedModel}
+                            {m.usedBackupModel ? ' (Backup)' : ''}
+                          </span>
                         )}
                       </>
                     )}
@@ -212,13 +233,15 @@ export const GreenyConversation: React.FC<GreenyConversationProps> = ({
                       <button
                         type="button"
                         onClick={() => onSaveToFirestore(m)}
-                        className="inline-flex items-center gap-1 text-[10px] text-[#00C878] hover:underline"
+                        className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#174C38] dark:text-[#00D69A] hover:underline cursor-pointer"
                       >
                         <BookmarkCheck className="w-3 h-3" />
                         Save
                       </button>
                     )}
-                    <span className="font-mono text-[10px]">{m.timestamp}</span>
+                    <span className={`font-mono text-[10px] ${isUser ? 'opacity-80' : 'text-[#10251D]/60 dark:text-[#B6CDB4]'}`}>
+                      {m.timestamp}
+                    </span>
                   </div>
                 </div>
 
@@ -227,15 +250,15 @@ export const GreenyConversation: React.FC<GreenyConversationProps> = ({
 
                 {/* Retry Action when Gemini returns HTTP 503 */}
                 {m.isRetryableError && m.failedUserQuery && (
-                  <div className="mt-2.5 pt-2 border-t border-amber-400/30 flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 text-[11px] text-amber-200">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                  <div className="mt-2.5 pt-2.5 border-t border-[#FF806B]/35 flex items-center justify-between gap-2">
+                    <span className="inline-flex items-center gap-1 text-[11px] text-[#7A2F1E] dark:text-[#F5CA62]">
+                      <AlertTriangle className="w-3.5 h-3.5 text-[#FF806B] dark:text-[#F5CA62] shrink-0" />
                       AI response unavailable — your conversation is preserved.
                     </span>
                     <button
                       type="button"
                       onClick={() => onSendMessage(m.failedUserQuery)}
-                      className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-amber-400 text-[#071B12] text-[11px] font-bold hover:bg-amber-300 transition-colors whitespace-nowrap shrink-0"
+                      className="inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-[#F5CA62] text-[#10251D] text-[11px] font-bold hover:opacity-90 transition-opacity whitespace-nowrap shrink-0 cursor-pointer"
                     >
                       <RotateCcw className="w-3 h-3" />
                       Retry Question
@@ -245,8 +268,8 @@ export const GreenyConversation: React.FC<GreenyConversationProps> = ({
 
                 {/* Suggested Care Action */}
                 {m.suggestedAction && m.sourceCategory !== 'SERVICE_ERROR' && (
-                  <div className="mt-2 pt-2 border-t border-slate-200/60 dark:border-[#00C878]/20 text-[11px] text-emerald-700 dark:text-[#B7F76B]">
-                    <strong>Little Buddy Tip:</strong> {m.suggestedAction}
+                  <div className="mt-2.5 pt-2 border-t border-[#174C38]/12 dark:border-[#00D69A]/18 text-[11px] text-[#174C38] dark:text-[#C7F36B]">
+                    <strong>Observatory Tip:</strong> {m.suggestedAction}
                   </div>
                 )}
 
@@ -257,8 +280,10 @@ export const GreenyConversation: React.FC<GreenyConversationProps> = ({
 
                 {/* Google Search Grounding Sources */}
                 {m.sources && m.sources.length > 0 && (
-                  <div className="mt-2 pt-2 border-t border-slate-200/60 dark:border-[#00C878]/20 space-y-1">
-                    <span className="text-[10px] font-mono text-[#00C878]">Verified Web Sources:</span>
+                  <div className="mt-2.5 pt-2 border-t border-[#174C38]/12 dark:border-[#00D69A]/18 space-y-1">
+                    <span className="text-[10px] font-mono text-[#174C38] dark:text-[#00D69A] uppercase tracking-wider">
+                      Verified Web Sources
+                    </span>
                     <div className="flex flex-wrap gap-2">
                       {m.sources.slice(0, 3).map((src, i) => (
                         <a
@@ -266,7 +291,7 @@ export const GreenyConversation: React.FC<GreenyConversationProps> = ({
                           href={src.uri}
                           target="_blank"
                           rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-[11px] text-emerald-700 dark:text-[#B7F76B] underline"
+                          className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#FAF7EE] dark:bg-[#10251D] text-[11px] text-[#10251D] dark:text-[#00D69A] hover:underline"
                         >
                           {src.title}
                           <ExternalLink className="w-2.5 h-2.5" />
@@ -279,40 +304,53 @@ export const GreenyConversation: React.FC<GreenyConversationProps> = ({
 
               {/* Strictly Separated Saved Garden Information Card (Never disguised as AI response) */}
               {m.savedGardenContext && (
-                <div className="mr-3 p-3 rounded-xl border border-[#00C878]/30 bg-emerald-950/30 text-xs text-[#F7F9F2]/90 space-y-1">
-                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#B7F76B]">
+                <div className="mr-2 sm:mr-6 p-3 rounded-xl border border-[#00D69A]/30 bg-[#FFFFFF] dark:bg-[#10251D] text-xs text-[#10251D] dark:text-[#FAF7EE] space-y-1">
+                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#174C38] dark:text-[#C7F36B]">
                     Saved Garden Information · Contextual Memory (Not a New AI Diagnosis)
                   </div>
-                  <p className="text-[11px] leading-relaxed">{m.savedGardenContext}</p>
+                  <p className="text-[11px] leading-relaxed text-[#10251D]/75 dark:text-[#B6CDB4]">{m.savedGardenContext}</p>
                 </div>
               )}
 
               {/* Strictly Separated General Plant Care Reference Card */}
               {m.generalCareReference && (
-                <div className="mr-3 p-3 rounded-xl border border-slate-300 dark:border-[#123D2A] bg-slate-100 dark:bg-[#071B12]/90 text-xs text-slate-700 dark:text-[#F7F9F2]/85 space-y-1">
-                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#00C878]">
+                <div className="mr-2 sm:mr-6 p-3 rounded-xl border border-[#174C38]/15 dark:border-[#00D69A]/20 bg-[#FFFFFF] dark:bg-[#10251D] text-xs text-[#10251D] dark:text-[#FAF7EE] space-y-1">
+                  <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#174C38] dark:text-[#56C7C0]">
                     General Plant Care Advice · Verified Reference Knowledge
                   </div>
-                  <p className="text-[11px] leading-relaxed">{m.generalCareReference}</p>
+                  <p className="text-[11px] leading-relaxed text-[#10251D]/75 dark:text-[#B6CDB4]">{m.generalCareReference}</p>
                 </div>
               )}
-            </div>
+            </motion.div>
           );
         })}
+
+        {/* Animated Thinking State Indicator */}
+        {isThinking && (
+          <div
+            role="status"
+            aria-live="polite"
+            className="mr-6 p-3.5 rounded-2xl rounded-bl-md bg-[#FFFFFF] dark:bg-[#153026] border border-[#00D69A]/35 flex items-center gap-2.5 text-xs text-[#10251D] dark:text-[#C7F36B] w-fit shadow-xs"
+          >
+            <Leaf className="w-3.5 h-3.5 text-[#174C38] dark:text-[#00D69A]" />
+            <span className="font-mono text-[11px]">GREENY is synthesizing botanical context...</span>
+          </div>
+        )}
+
         <div ref={threadEndRef} />
       </div>
 
       {/* Input & Voice Control Bar */}
-      <div className="p-3 bg-slate-100 dark:bg-[#0B2419] border-t border-slate-200 dark:border-[#123D2A] flex items-center gap-2">
+      <div className="p-3 bg-[#FFFFFF] dark:bg-[#153026] border-t border-[#174C38]/12 dark:border-[#00D69A]/18 flex items-center gap-2">
         <button
           type="button"
           onClick={onStartVoiceInput}
           aria-label={isListening ? 'Stop Microphone' : 'Activate Microphone'}
           title={isListening ? 'Stop Listening' : 'Speak to GREENY'}
-          className={`p-2.5 rounded-xl transition-colors shrink-0 ${
+          className={`p-2.5 rounded-xl transition-colors shrink-0 cursor-pointer ${
             isListening
-              ? 'bg-red-500 text-white'
-              : 'bg-white dark:bg-[#123D2A] text-slate-800 dark:text-[#B7F76B] border border-slate-200 dark:border-[#00C878]/30 hover:bg-[#00C878] hover:text-[#071B12]'
+              ? 'bg-[#FF806B] text-[#10251D]'
+              : 'bg-[#FAF7EE] dark:bg-[#10251D] text-[#10251D] dark:text-[#00D69A] border border-[#174C38]/15 dark:border-[#00D69A]/25 hover:bg-[#174C38] hover:text-[#FFFFFF] dark:hover:bg-[#00D69A] dark:hover:text-[#10251D]'
           }`}
         >
           {isListening ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
@@ -323,12 +361,12 @@ export const GreenyConversation: React.FC<GreenyConversationProps> = ({
           onClick={onToggleVoice}
           aria-label={voiceEnabled ? 'Mute GREENY Voice' : 'Enable GREENY Voice'}
           title={voiceEnabled ? 'Voice Enabled (Click to Mute)' : 'Voice Muted (Click to Enable)'}
-          className="p-2.5 rounded-xl bg-white dark:bg-[#123D2A] text-slate-800 dark:text-[#F7F9F2] border border-slate-200 dark:border-[#123D2A] hover:border-[#00C878] transition-colors shrink-0"
+          className="p-2.5 rounded-xl bg-[#FAF7EE] dark:bg-[#10251D] text-[#10251D] dark:text-[#FAF7EE] border border-[#174C38]/15 dark:border-[#00D69A]/25 hover:border-[#00D69A] transition-colors shrink-0 cursor-pointer"
         >
           {voiceEnabled ? (
-            <Volume2 className="w-4 h-4 text-[#00C878]" />
+            <Volume2 className="w-4 h-4 text-[#174C38] dark:text-[#00D69A]" />
           ) : (
-            <VolumeX className="w-4 h-4 text-amber-400" />
+            <VolumeX className="w-4 h-4 text-[#FF806B]" />
           )}
         </button>
 
@@ -337,7 +375,7 @@ export const GreenyConversation: React.FC<GreenyConversationProps> = ({
           onClick={onReplayLastVoice}
           aria-label="Replay GREENY Last Spoken Response"
           title="Replay Last Spoken Response"
-          className="p-2.5 rounded-xl bg-white dark:bg-[#123D2A] text-slate-800 dark:text-[#B7F76B] border border-slate-200 dark:border-[#123D2A] hover:border-[#00C878] transition-colors shrink-0"
+          className="p-2.5 rounded-xl bg-[#FAF7EE] dark:bg-[#10251D] text-[#10251D] dark:text-[#00D69A] border border-[#174C38]/15 dark:border-[#00D69A]/25 hover:border-[#00D69A] transition-colors shrink-0 cursor-pointer"
         >
           <RotateCcw className="w-4 h-4" />
         </button>
@@ -350,17 +388,17 @@ export const GreenyConversation: React.FC<GreenyConversationProps> = ({
           placeholder={
             language === 'ta'
               ? 'GREENY-யிடம் தாவர கேள்வியை கேளுங்கள்...'
-              : 'Ask GREENY about plants, care, or how to use MyPlantCare...'
+              : 'Ask GREENY about plants, care, or navigation...'
           }
           aria-label="Ask GREENY a question"
-          className="flex-1 bg-white dark:bg-[#071B12] border border-slate-200 dark:border-[#123D2A] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 dark:placeholder-[#F7F9F2]/40 focus:outline-none focus:border-[#00C878]"
+          className="flex-1 bg-[#FAF7EE] dark:bg-[#10251D] border border-[#174C38]/18 dark:border-[#00D69A]/25 rounded-xl px-3.5 py-2 text-xs text-[#10251D] dark:text-[#FAF7EE] placeholder-[#10251D]/55 dark:placeholder-[#B6CDB4]/60 focus:outline-none focus:ring-2 focus:ring-[#00D69A]/50"
         />
 
         <button
           type="button"
           onClick={() => onSendMessage()}
           aria-label="Send message to GREENY"
-          className="p-2.5 rounded-xl bg-[#00C878] text-[#071B12] font-bold hover:bg-[#B7F76B] transition-colors shrink-0"
+          className="p-2.5 rounded-xl bg-[#174C38] dark:bg-[#00D69A] text-[#FFFFFF] dark:text-[#10251D] font-bold hover:brightness-110 transition-all shrink-0 cursor-pointer shadow-xs"
         >
           <Send className="w-4 h-4" />
         </button>

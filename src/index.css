@@ -3,43 +3,361 @@
 
 @layer base {
   :root {
-    --font-display: 'Manrope', sans-serif;
-    --font-sans: 'Plus Jakarta Sans', sans-serif;
-    --font-mono: 'JetBrains Mono', monospace;
+    --font-display: 'Plus Jakarta Sans', system-ui, sans-serif;
+    --font-sans: 'DM Sans', system-ui, sans-serif;
+    --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+    /* AI BOTANICAL OBSERVATORY — Light Theme (Warm Ivory & Deep Forest) */
+    --obs-canvas: #FAF7EE;
+    --obs-canvas-alt: #F1ECE0;
+    --obs-surface: #FFFFFF;
+    --obs-surface-elevated: #FCFBF7;
+    --obs-surface-sage: #E9F0E6;
+    --obs-glass: rgba(255, 255, 255, 0.86);
+    --obs-glass-strong: rgba(250, 247, 238, 0.94);
+
+    --obs-ink: #10251D;
+    --obs-forest: #174C38;
+    --obs-muted: #4A665B;
+    --obs-sage: #B6CDB4;
+
+    --obs-emerald: #00D69A;
+    --obs-emerald-ink: #0F6B50;
+    --obs-lime: #C7F36B;
+    --obs-coral: #FF806B;
+    --obs-gold: #F5CA62;
+    --obs-lavender: #BBA8F5;
+    --obs-teal: #56C7C0;
+
+    --obs-border: rgba(23, 76, 56, 0.13);
+    --obs-border-strong: rgba(0, 214, 154, 0.42);
+    --obs-shadow: 0 2px 6px rgba(16, 37, 29, 0.04), 0 16px 36px -22px rgba(23, 76, 56, 0.18);
+    --obs-shadow-hover: 0 6px 14px -4px rgba(16, 37, 29, 0.08), 0 24px 44px -18px rgba(23, 76, 56, 0.22);
+
+    /* Unified aliases mapped cleanly to Observatory tokens */
+    --bf-canvas: var(--obs-canvas);
+    --bf-canvas-alt: var(--obs-canvas-alt);
+    --bf-surface: var(--obs-surface);
+    --bf-surface-muted: #F3EFE4;
+    --bf-surface-sage: var(--obs-surface-sage);
+    --bf-glass: var(--obs-glass);
+    --bf-border: var(--obs-border);
+    --bf-border-strong: var(--obs-border-strong);
+
+    --bf-text-primary: var(--obs-ink);
+    --bf-text-body: #18342A;
+    --bf-text-secondary: var(--obs-muted);
+    --bf-accent: var(--obs-emerald);
+    --bf-accent-deep: var(--obs-forest);
+    --bf-accent-soft: rgba(0, 214, 154, 0.12);
+    --bf-gold: var(--obs-gold);
+
+    --earth-bg-main: var(--obs-canvas);
+    --earth-bg-secondary: var(--obs-surface-sage);
+    --earth-card: var(--obs-surface);
+    --earth-forest: var(--obs-forest);
+    --earth-emerald: var(--obs-emerald);
+    --earth-mint: #B9EBD2;
+    --earth-sage: var(--obs-sage);
+    --earth-yellow: var(--obs-gold);
+    --earth-coral: var(--obs-coral);
+    --earth-terracotta: #D97A5C;
+    --earth-lavender: var(--obs-lavender);
+    --earth-text-main: var(--obs-ink);
+    --earth-text-secondary: var(--obs-muted);
+  }
+
+  .dark {
+    /* AI BOTANICAL OBSERVATORY — Dark Theme (Midnight Botanical & Electric Emerald) */
+    --obs-canvas: #10251D;
+    --obs-canvas-alt: #0B1B15;
+    --obs-surface: #153026;
+    --obs-surface-elevated: #193A2E;
+    --obs-surface-sage: #1D4334;
+    --obs-glass: rgba(16, 37, 29, 0.82);
+    --obs-glass-strong: rgba(12, 29, 22, 0.92);
+
+    --obs-ink: #FAF7EE;
+    --obs-forest: #C7F36B;
+    --obs-muted: #B6CDB4;
+    --obs-sage: #B6CDB4;
+
+    --obs-emerald: #00D69A;
+    --obs-emerald-ink: #00D69A;
+    --obs-lime: #C7F36B;
+    --obs-coral: #FF806B;
+    --obs-gold: #F5CA62;
+    --obs-lavender: #BBA8F5;
+    --obs-teal: #56C7C0;
+
+    --obs-border: rgba(182, 205, 180, 0.16);
+    --obs-border-strong: rgba(0, 214, 154, 0.48);
+    --obs-shadow: 0 1px 0 rgba(199, 243, 107, 0.06) inset, 0 18px 40px -22px rgba(4, 12, 9, 0.72);
+    --obs-shadow-hover: 0 1px 0 rgba(0, 214, 154, 0.22) inset, 0 26px 52px -18px rgba(4, 12, 9, 0.86);
+
+    /* Unified aliases for Dark Mode */
+    --bf-canvas: var(--obs-canvas);
+    --bf-canvas-alt: var(--obs-canvas-alt);
+    --bf-surface: var(--obs-surface);
+    --bf-surface-muted: #1A3A2E;
+    --bf-surface-sage: var(--obs-surface-sage);
+    --bf-glass: var(--obs-glass);
+    --bf-border: var(--obs-border);
+    --bf-border-strong: var(--obs-border-strong);
+
+    --bf-text-primary: #FAF7EE;
+    --bf-text-body: #EBF2EA;
+    --bf-text-secondary: #B6CDB4;
+    --bf-accent: #00D69A;
+    --bf-accent-deep: #C7F36B;
+    --bf-accent-soft: rgba(0, 214, 154, 0.16);
+    --bf-gold: #F5CA62;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    color-scheme: light;
+    transition: background-color 320ms cubic-bezier(0.22, 1, 0.36, 1), color 240ms ease;
+  }
+
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
     font-family: var(--font-sans);
+    background-color: var(--obs-canvas);
+    color: var(--obs-ink);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 320ms cubic-bezier(0.22, 1, 0.36, 1), color 240ms ease;
   }
 
-  h1, h2, h3, h4, .font-display {
+  h1, h2, h3, h4 {
     font-family: var(--font-display);
     text-wrap: balance;
+    letter-spacing: -0.02em;
+  }
+
+  .font-display {
+    font-family: var(--font-display);
+    letter-spacing: -0.005em;
+    word-spacing: 0.06em;
   }
 
   .font-mono, .tabular-nums {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;
   }
+
+  .font-tamil {
+    font-family: 'Noto Sans Tamil', var(--font-sans);
+    line-height: 1.45;
+  }
 }
 
-@keyframes scanline {
+/* Smooth animated theme switch helper (scoped to canvas/body to prevent 3000-node paint stalls) */
+.obs-theme-transition,
+.obs-theme-transition body {
+  transition-property: background-color, color;
+  transition-duration: 240ms;
+  transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Observatory Surface Primitives */
+@keyframes botanicalBloom {
   0% {
-    transform: translateY(0%);
-    opacity: 0.85;
-  }
-  50% {
-    transform: translateY(260px);
-    opacity: 1;
+    opacity: 0;
+    transform: translate3d(0, 14px, 0) scale(0.975);
   }
   100% {
-    transform: translateY(0%);
-    opacity: 0.85;
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+.obs-card {
+  background-color: var(--obs-surface);
+  border: 1px solid var(--obs-border);
+  box-shadow: var(--obs-shadow);
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease, border-color 220ms ease, background-color 260ms ease;
+}
+
+.obs-card-interactive:hover {
+  transform: translate3d(0, -3px, 0);
+  border-color: var(--obs-border-strong);
+  box-shadow: var(--obs-shadow-hover);
+}
+
+.obs-glass {
+  background-color: var(--obs-glass);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  border: 1px solid var(--obs-border);
+}
+
+.obs-glass-strong {
+  background-color: var(--obs-glass-strong);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  border: 1px solid var(--obs-border);
+}
+
+/* Preserved legacy .bf-surface class so existing components blend seamlessly */
+.bf-surface {
+  background-color: var(--obs-surface);
+  border-color: var(--obs-border);
+  box-shadow: var(--obs-shadow);
+  opacity: 1;
+  transform: none;
+  transition: transform 260ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 260ms ease, border-color 200ms ease, background-color 260ms ease;
+}
+
+.bf-surface.is-bloomed {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
+
+.bf-surface:hover,
+.bf-surface.is-bloomed:hover {
+  animation: none;
+  opacity: 1;
+  transform: translate3d(0, -3px, 0);
+  border-color: var(--obs-border-strong);
+  box-shadow: var(--obs-shadow-hover);
+}
+
+.bf-glass {
+  background-color: var(--obs-glass);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+/* Observatory Atmospheric Canvases */
+.obs-atmosphere,
+.bf-ambient-canvas {
+  background-color: var(--obs-canvas);
+  background-image:
+    radial-gradient(ellipse 75% 46% at 14% -8%, rgba(0, 214, 154, 0.11), transparent 68%),
+    radial-gradient(ellipse 55% 42% at 88% 8%, rgba(199, 243, 107, 0.16), transparent 64%),
+    radial-gradient(ellipse 46% 36% at 50% 96%, rgba(86, 199, 192, 0.08), transparent 70%),
+    radial-gradient(rgba(23, 76, 56, 0.065) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 30px 30px;
+}
+
+.dark .obs-atmosphere,
+.dark .bf-ambient-canvas {
+  background-color: var(--obs-canvas);
+  background-image:
+    radial-gradient(ellipse 78% 46% at 15% -10%, rgba(0, 214, 154, 0.16), transparent 68%),
+    radial-gradient(ellipse 52% 40% at 88% 12%, rgba(86, 199, 192, 0.11), transparent 65%),
+    radial-gradient(ellipse 45% 36% at 52% 96%, rgba(199, 243, 107, 0.07), transparent 72%),
+    radial-gradient(rgba(182, 205, 180, 0.06) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 30px 30px;
+}
+
+.living-earth-texture {
+  background-image:
+    radial-gradient(ellipse 80% 45% at 50% -10%, rgba(0, 214, 154, 0.1), transparent 68%),
+    radial-gradient(rgba(23, 76, 56, 0.06) 1px, transparent 1px);
+  background-size: 100% 100%, 30px 30px;
+}
+
+.dark .living-earth-texture {
+  background-image:
+    radial-gradient(ellipse 80% 45% at 50% -10%, rgba(0, 214, 154, 0.14), transparent 68%),
+    radial-gradient(rgba(0, 214, 154, 0.065) 1px, transparent 1px);
+  background-size: 100% 100%, 30px 30px;
+}
+
+/* Composited Observatory Scan & Botanical Animations */
+@keyframes scanSweep {
+  0% {
+    transform: translate3d(0, -10%, 0);
+    opacity: 0.35;
+  }
+  50% {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translate3d(0, -10%, 0);
+    opacity: 0.35;
   }
 }
 
 .animate-scanline {
-  animation: scanline 3.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: scanSweep 3.4s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes obsSpinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-obs-orbit {
+  animation: obsSpinSlow 28s linear infinite;
+}
+
+.animate-obs-orbit-reverse {
+  animation: obsSpinSlow 38s linear infinite reverse;
+}
+
+@keyframes leafFloatSlow {
+  0%, 100% {
+    transform: translate3d(0, 0, 0) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(8px, -12px, 0) rotate(7deg);
+  }
+}
+
+.animate-leaf-float {
+  animation: leafFloatSlow 7s ease-in-out infinite;
+}
+
+@keyframes botanicalPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.04);
+    opacity: 1;
+  }
+}
+
+.animate-botanical-pulse,
+.botanical-pulse {
+  animation: botanicalPulse 8s ease-in-out infinite;
+  transform-origin: center center;
+}
+
+/* Subtle custom scrollbars */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(23, 76, 56, 0.24);
+  border-radius: 999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(0, 214, 154, 0.28);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 214, 154, 0.55);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -50,3 +368,95 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Official Google Sign-In Material Button */
+.gsi-material-button {
+  -moz-user-select: none;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  -webkit-appearance: none;
+  background-color: #ffffff;
+  background-image: none;
+  border: 1px solid #747775;
+  -webkit-border-radius: 9999px;
+  border-radius: 9999px;
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+  color: #1f1f1f;
+  cursor: pointer;
+  font-family: 'Roboto', 'DM Sans', arial, sans-serif;
+  font-size: 14px;
+  height: 40px;
+  letter-spacing: 0.25px;
+  outline: none;
+  overflow: hidden;
+  padding: 0 16px;
+  position: relative;
+  text-align: center;
+  -webkit-transition: background-color .218s, border-color .218s, box-shadow .218s;
+  transition: background-color .218s, border-color .218s, box-shadow .218s;
+  vertical-align: middle;
+  white-space: nowrap;
+  width: auto;
+  max-width: 400px;
+  min-width: min-content;
+}
+
+.gsi-material-button .gsi-material-button-icon {
+  height: 20px;
+  margin-right: 10px;
+  min-width: 20px;
+  width: 20px;
+}
+
+.gsi-material-button .gsi-material-button-content-wrapper {
+  -webkit-align-items: center;
+  align-items: center;
+  display: flex;
+  -webkit-flex-direction: row;
+  flex-direction: row;
+  -webkit-flex-wrap: nowrap;
+  flex-wrap: nowrap;
+  height: 100%;
+  justify-content: space-between;
+  position: relative;
+  width: 100%;
+}
+
+.gsi-material-button .gsi-material-button-contents {
+  -webkit-flex-grow: 1;
+  flex-grow: 1;
+  font-family: 'Roboto', 'DM Sans', arial, sans-serif;
+  font-weight: 500;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  vertical-align: top;
+}
+
+.gsi-material-button .gsi-material-button-state {
+  -webkit-transition: opacity .218s;
+  transition: opacity .218s;
+  bottom: 0;
+  left: 0;
+  opacity: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.gsi-material-button:disabled {
+  cursor: default;
+  background-color: #ffffff61;
+  border-color: #1f1f1f1f;
+}
+
+.gsi-material-button:not(:disabled):hover {
+  -webkit-box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+  box-shadow: 0 1px 2px 0 rgba(60, 64, 67, .30), 0 1px 3px 1px rgba(60, 64, 67, .15);
+}
+
+.gsi-material-button:not(:disabled):hover .gsi-material-button-state {
+  background-color: #303030;
+  opacity: 8%;
+}
+

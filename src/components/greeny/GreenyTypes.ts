@@ -110,6 +110,34 @@ export function subscribeGreenyAppEvents(listener: GreenyEventListener): () => v
   };
 }
 
+export interface GreenyAskRequestPayload {
+  toolName: string;
+  plantName?: string;
+  headline: string;
+  severity: string;
+  summaryPrompt: string;
+}
+
+type GreenyAskListener = (req: GreenyAskRequestPayload) => void;
+const askListeners = new Set<GreenyAskListener>();
+
+export function emitGreenyAskRequest(req: GreenyAskRequestPayload): void {
+  askListeners.forEach((listener) => {
+    try {
+      listener(req);
+    } catch {
+      // ignore listener errors
+    }
+  });
+}
+
+export function subscribeGreenyAskRequests(listener: GreenyAskListener): () => void {
+  askListeners.add(listener);
+  return () => {
+    askListeners.delete(listener);
+  };
+}
+
 export const GREENY_DIALOGUE_LIBRARY = {
   en: {
     firstGreeting: "Yayyy! You're here! Welcome to MyPlantCare! I'm GREENY, your little gardening buddy!",

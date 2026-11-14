@@ -96,21 +96,21 @@ const NAVIGATION_GUIDE_DATABASE: Array<{
     },
   },
   {
-    keywords: /\b(watering\s+help|when\s+to\s+water|watering\s+schedule|soil\s+calculator|iot\s+irrigation|weather)\b/i,
+    keywords: /\b(watering\s+help|when\s+to\s+water|watering\s+schedule|soil\s+calculator|iot\s+irrigation|weather|ai\s+tools|plant\s+safety|pruning|repotting|weed)\b/i,
     match: {
       targetView: 'intelligence',
-      subTarget: 'watering',
-      navHighlightId: 'nav-ai-intelligence',
-      routeTitle: 'Smart Watering & Soil Intelligence',
+      subTarget: 'watering-doctor',
+      navHighlightId: 'intelligence',
+      routeTitle: 'AI Plant Intelligence Centre (/ai-tools)',
       steps: [
-        'Click "AI Intelligence" in the top bar.',
-        'Select the "Smart Watering" or "Soil & NPK Lab" tool.',
-        'Check your live weather evapotranspiration and exact ml watering volume!',
+        'Click "AI Intelligence" in the top bar or mobile drawer to open /ai-tools.',
+        'Pick any of the 19 dedicated camera-powered AI tools (e.g., Watering Doctor, Soil Analyser, Pruning Guide).',
+        'Capture or upload a plant photo and tap "Analyse Plant" for structured botanical guidance!',
       ],
       dialogueEn:
-        "Is our little friend thirsty? Let's open Smart Watering & Soil Intelligence to check the exact water schedule!",
+        "Let's open our 19 Camera-Powered AI Plant Tools! Each tool opens its own dedicated workspace with camera scanning and tailored advice!",
       dialogueTa:
-        'நம்ம செடிக்கு எவ்வளவு தண்ணீர் தேவை என்று பார்க்க "AI Intelligence" பகுதிக்குச் செல்வோம்!',
+        'நம்ம 19 கேமரா AI தாவர கருவிகளைத் திறப்போம்! ஒவ்வொரு கருவிக்கும் தனிப் பணியிடம் உள்ளது!',
     },
   },
 ];
@@ -131,9 +131,9 @@ export function highlightTargetNavigationElement(navHighlightId: string): void {
   const el = document.querySelector(`[data-greeny-nav="${navHighlightId}"]`) as HTMLElement | null;
   if (!el) return;
   el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  el.classList.add('ring-2', 'ring-[#B7F76B]', 'ring-offset-2');
+  el.classList.add('ring-2', 'ring-[#00D69A]', 'ring-offset-2');
   window.setTimeout(() => {
-    el.classList.remove('ring-2', 'ring-[#B7F76B]', 'ring-offset-2');
+    el.classList.remove('ring-2', 'ring-[#00D69A]', 'ring-offset-2');
   }, 4000);
 }
 
@@ -147,20 +147,20 @@ export const GreenyNavigationGuideCard: React.FC<GreenyNavigationGuideCardProps>
   onNavigate,
 }) => {
   return (
-    <div className="mt-2.5 p-3.5 rounded-xl border border-[#00C878]/40 bg-[#071B12]/90 text-[#F7F9F2] space-y-2.5">
+    <div className="mt-2.5 p-3.5 rounded-xl border border-[#00D69A]/40 bg-[#10251D] text-[#FAF7EE] space-y-2.5">
       <div className="flex items-center justify-between gap-2">
-        <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold text-[#B7F76B]">
-          <Compass className="w-3.5 h-3.5 text-[#00C878]" />
+        <span className="inline-flex items-center gap-1.5 text-[11px] font-mono font-bold text-[#C7F36B]">
+          <Compass className="w-3.5 h-3.5 text-[#00D69A]" />
           Website Navigation Guide · {guide.routeTitle}
         </span>
       </div>
 
-      <ol className="space-y-1.5 text-xs text-[#F7F9F2]/90">
+      <ol className="space-y-1.5 text-xs text-[#FAF7EE]/90">
         {guide.steps.map((step, idx) => (
           <li key={idx} className="flex items-start gap-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-[#00C878] shrink-0 mt-0.5" />
+            <CheckCircle2 className="w-3.5 h-3.5 text-[#00D69A] shrink-0 mt-0.5" />
             <span>
-              <strong className="text-[#B7F76B]">Step {idx + 1}:</strong> {step}
+              <strong className="text-[#C7F36B]">Step {idx + 1}:</strong> {step}
             </span>
           </li>
         ))}
@@ -174,7 +174,7 @@ export const GreenyNavigationGuideCard: React.FC<GreenyNavigationGuideCardProps>
               highlightTargetNavigationElement(guide.navHighlightId);
               onNavigate(guide.targetView, guide.subTarget);
             }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#00C878] text-[#071B12] text-xs font-bold hover:bg-[#B7F76B] transition-colors whitespace-nowrap shrink-0"
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[#00D69A] text-[#10251D] text-xs font-bold hover:bg-[#C7F36B] transition-colors whitespace-nowrap shrink-0"
           >
             <span>Open {guide.routeTitle}</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -182,7 +182,7 @@ export const GreenyNavigationGuideCard: React.FC<GreenyNavigationGuideCardProps>
           <button
             type="button"
             onClick={() => highlightTargetNavigationElement(guide.navHighlightId)}
-            className="px-3 py-1.5 rounded-lg border border-[#00C878]/40 text-[#B7F76B] text-xs font-semibold hover:bg-[#123D2A] transition-colors whitespace-nowrap shrink-0"
+            className="px-3 py-1.5 rounded-lg border border-[#00D69A]/40 text-[#B6CDB4] text-xs font-semibold hover:bg-[#174C38] hover:text-[#FAF7EE] transition-colors whitespace-nowrap shrink-0"
           >
             Highlight Menu Item
           </button>

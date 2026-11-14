@@ -1,185 +1,20 @@
-export interface LibraryPlant {
-  id: string;
-  commonName: string;
-  scientificName: string;
-  family: string;
-  origin: string;
-  category: 'Indoor Foliage' | 'Sacred & Medicinal' | 'Air Purifying' | 'Tropical Flowering' | 'Kitchen & Culinary';
-  spaceSuitability: 'Indoor' | 'Outdoor' | 'Both';
-  sunlight: 'Low to Medium' | 'Bright Indirect' | 'Direct Morning Sun' | 'Full Sun';
-  waterNeed: 'Low' | 'Moderate' | 'High';
-  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
-  climate: 'Tropical & Humid' | 'Warm Subtropical' | 'Adaptable All-India';
-  growthRate: string;
-  maxHeight: string;
-  leafStructure: string;
-  flowerInfo: string;
-  soilMix: string;
-  imageUrl: string;
-  benefits: string;
-}
+import { ALL_EXPANDED_PLANTS, LibraryPlant } from './plants';
+import { BOTANICAL_IMAGES } from '../utils/botanicalImageResolver';
 
-export const PLANT_LIBRARY: LibraryPlant[] = [
-  {
-    id: 'monstera-deliciosa',
-    commonName: 'Swiss Cheese Plant',
-    scientificName: 'Monstera deliciosa',
-    family: 'Araceae',
-    origin: 'Southern Mexico & Tropical Americas',
-    category: 'Indoor Foliage',
-    spaceSuitability: 'Indoor',
-    sunlight: 'Bright Indirect',
-    waterNeed: 'Moderate',
-    difficulty: 'Beginner',
-    climate: 'Tropical & Humid',
-    growthRate: 'Fast (30–45 cm/year indoors)',
-    maxHeight: '2.4m indoors (with moss pole)',
-    leafStructure: 'Cordate, deeply fenestrated leathery emerald blades with long petioles',
-    flowerInfo: 'Creamy spadix enclosed by a velvety hood (rarely blooms indoors)',
-    soilMix: '40% coco chips, 30% pine bark, 20% vermicompost, 10% perlite (pH 5.8–6.5)',
-    imageUrl: '/src/assets/images/plant_monstera_deliciosa_1794482112942.jpg',
-    benefits: 'Iconic architectural foliage; high stomatal transpiration improves indoor micro-humidity.',
-  },
-  {
-    id: 'ocimum-tenuiflorum',
-    commonName: 'Krishna Tulsi (Holy Basil)',
-    scientificName: 'Ocimum tenuiflorum',
-    family: 'Lamiaceae',
-    origin: 'Indian Subcontinent',
-    category: 'Sacred & Medicinal',
-    spaceSuitability: 'Both',
-    sunlight: 'Direct Morning Sun',
-    waterNeed: 'Moderate',
-    difficulty: 'Beginner',
-    climate: 'Adaptable All-India',
-    growthRate: 'Fast (bushy branching in 60 days)',
-    maxHeight: '60–90 cm',
-    leafStructure: 'Aromatic decussate serrated leaves rich in eugenol and rosmarinic essential oils',
-    flowerInfo: 'Elongated purple-violet verticillaster racemes (Manjari)',
-    soilMix: '60% fertile garden loam, 25% cow dung / vermicompost, 15% river sand (pH 6.0–7.2)',
-    imageUrl: '/src/assets/images/plant_tulsi_holy_basil_1794482114261.jpg',
-    benefits: 'Revered adaptogenic herb; attracts native pollinators and repels mosquitoes naturally.',
-  },
-  {
-    id: 'ficus-lyrata',
-    commonName: 'Fiddle Leaf Fig',
-    scientificName: 'Ficus lyrata',
-    family: 'Moraceae',
-    origin: 'Western African Lowland Rainforests',
-    category: 'Indoor Foliage',
-    spaceSuitability: 'Indoor',
-    sunlight: 'Bright Indirect',
-    waterNeed: 'Moderate',
-    difficulty: 'Intermediate',
-    climate: 'Tropical & Humid',
-    growthRate: 'Moderate (25–35 cm/year)',
-    maxHeight: '3.0m indoors',
-    leafStructure: 'Lyrate (violin-shaped), heavily veined, glossy dark forest-green leaves up to 45cm long',
-    flowerInfo: 'Enclosed syconium figs (non-flowering in home interiors)',
-    soilMix: '50% peat/coco coir, 25% composted pine bark, 25% perlite/pumice (pH 6.0–6.8)',
-    imageUrl: '/src/assets/images/plant_fiddle_leaf_fig_1794482115866.jpg',
-    benefits: 'Statement sculptural tree canopy for modern living spaces and sunlit studios.',
-  },
-  {
-    id: 'epipremnum-aureum',
-    commonName: 'Golden Pothos (Money Plant)',
-    scientificName: 'Epipremnum aureum',
-    family: 'Araceae',
-    origin: 'Moorea (French Polynesia) & South Asia',
-    category: 'Air Purifying',
-    spaceSuitability: 'Both',
-    sunlight: 'Low to Medium',
-    waterNeed: 'Low',
-    difficulty: 'Beginner',
-    climate: 'Adaptable All-India',
-    growthRate: 'Very Fast (trailing vines 15–25 cm/month)',
-    maxHeight: '2.5m trailing or climbing',
-    leafStructure: 'Heart-shaped glossy leaves variegated with golden-chartreuse marbling',
-    flowerInfo: 'Shy spathe (almost never flowers in cultivation)',
-    soilMix: '50% cocopeat, 30% vermicompost, 20% perlite; also thrives in clean hydroponic water jars',
-    imageUrl: '/src/assets/images/hero_botanical_sanctuary_1794482113239.jpg',
-    benefits: 'Extremely resilient bio-filter for formaldehyde, benzene, and xylene in indoor rooms.',
-  },
-  {
-    id: 'dypsis-lutescens',
-    commonName: 'Areca Palm (Golden Cane Palm)',
-    scientificName: 'Dypsis lutescens',
-    family: 'Arecaceae',
-    origin: 'Madagascar & Tropical India',
-    category: 'Air Purifying',
-    spaceSuitability: 'Both',
-    sunlight: 'Bright Indirect',
-    waterNeed: 'Moderate',
-    difficulty: 'Beginner',
-    climate: 'Tropical & Humid',
-    growthRate: 'Moderate (20–30 cm/year)',
-    maxHeight: '1.8–2.4m indoors',
-    leafStructure: 'Arching pinnate fronds with 40–60 narrow emerald leaflets on golden-yellow canes',
-    flowerInfo: 'Panicles of yellow unisexual flowers below the crownshaft on mature outdoor specimens',
-    soilMix: '45% loamy soil, 30% cocopeat, 25% composted manure + sand (pH 6.1–6.8)',
-    imageUrl: '/src/assets/images/plant_monstera_deliciosa_1794482112942.jpg',
-    benefits: 'Natural humidifier releasing up to 1 liter of clean water vapor every 24 hours.',
-  },
-  {
-    id: 'hibiscus-rosa-sinensis',
-    commonName: 'Shoe Flower (Desi Gudhal / Hibiscus)',
-    scientificName: 'Hibiscus rosa-sinensis',
-    family: 'Malvaceae',
-    origin: 'Tropical Asia',
-    category: 'Tropical Flowering',
-    spaceSuitability: 'Outdoor',
-    sunlight: 'Full Sun',
-    waterNeed: 'High',
-    difficulty: 'Beginner',
-    climate: 'Warm Subtropical',
-    growthRate: 'Fast',
-    maxHeight: '1.5–2.5m shrub',
-    leafStructure: 'Ovate, glossy dark green leaves with coarsely toothed margins',
-    flowerInfo: 'Showy 10–15cm crimson, gold, or coral 5-petaled blooms with prominent staminal column',
-    soilMix: '50% red/alluvial soil, 35% aged vermicompost, 15% neem cake + bone meal (pH 5.8–6.8)',
-    imageUrl: '/src/assets/images/plant_tulsi_holy_basil_1794482114261.jpg',
-    benefits: 'Year-round tropical blooms rich in anthocyanins for herbal hair and tea infusions.',
-  },
-  {
-    id: 'murraya-koenigii',
-    commonName: 'Curry Leaf Tree (Kadi Patta)',
-    scientificName: 'Murraya koenigii',
-    family: 'Rutaceae',
-    origin: 'Indian Subcontinent',
-    category: 'Kitchen & Culinary',
-    spaceSuitability: 'Outdoor',
-    sunlight: 'Full Sun',
-    waterNeed: 'Moderate',
-    difficulty: 'Beginner',
-    climate: 'Adaptable All-India',
-    growthRate: 'Moderate to Fast in warm months',
-    maxHeight: '1.2–2.0m in balcony containers',
-    leafStructure: 'Pinnately compound aromatic leaves with 11–21 glossy lance-shaped leaflets',
-    flowerInfo: 'Fragrant white cymose clusters in spring followed by dark purple berries',
-    soilMix: '50% well-draining garden soil, 30% compost, 20% sand; loves fermented buttermilk drench',
-    imageUrl: '/src/assets/images/plant_fiddle_leaf_fig_1794482115866.jpg',
-    benefits: 'Essential fresh culinary herb packed with iron, calcium, and carbazole alkaloids.',
-  },
-  {
-    id: 'dracaena-trifasciata',
-    commonName: 'Snake Plant (Mother-in-Law’s Tongue)',
-    scientificName: 'Dracaena trifasciata',
-    family: 'Asparagaceae',
-    origin: 'West Africa',
-    category: 'Air Purifying',
-    spaceSuitability: 'Both',
-    sunlight: 'Low to Medium',
-    waterNeed: 'Low',
-    difficulty: 'Beginner',
-    climate: 'Adaptable All-India',
-    growthRate: 'Slow to Moderate',
-    maxHeight: '60–110 cm upright swords',
-    leafStructure: 'Stiff, succulent vertical sword blades with banded dark green centers and gold margins',
-    flowerInfo: 'Fragrant greenish-white night-blooming racemes under mild root-bound conditions',
-    soilMix: '50% cactus/succulent grit, 30% coarse sand/perlite, 20% compost (pH 6.0–7.5)',
-    imageUrl: '/src/assets/images/plant_monstera_deliciosa_1794482112942.jpg',
-    benefits: 'Performs Crassulacean Acid Metabolism (CAM), releasing oxygen throughout the night.',
-  },
+export { ALL_EXPANDED_PLANTS };
+export type { LibraryPlant };
+
+export const PLANT_LIBRARY: LibraryPlant[] = ALL_EXPANDED_PLANTS;
+
+
+export const REPAIRED_IMAGE_REFERENCES = [
+  { species: 'Coriander (Coriandrum sativum) & Spider Plant', previous: 'images.unsplash.com/photo-1588879460618 (Dell Laptop)', repaired: '/images/plants/coriandrum-sativum.webp' },
+  { species: '8 Plant Taxa (Jasmine, Crossandra, Sapota, etc.)', previous: 'images.unsplash.com/photo-1509198397868 (Game Controller)', repaired: '/images/plants/jasminum-sambac.webp' },
+  { species: 'Jackfruit Tree (Artocarpus heterophyllus)', previous: 'images.unsplash.com/photo-1589308078059 (Plated Food)', repaired: '/images/plants/artocarpus-heterophyllus.webp' },
+  { species: 'Black Gram & Cluster Beans', previous: 'images.unsplash.com/photo-1567306226416 (Red Apples)', repaired: '/images/plants/vigna-mungo.webp' },
+  { species: '11+ Broken 404 Stock URLs (Key Lime, Chili, Cassava, etc.)', previous: '4x HTTP 404 Unsplash URLs', repaired: '/images/plants/citrus-aurantiifolia.webp' },
+  { species: 'Golden Pothos Cascade (User DB Plant #4)', previous: 'hero_botanical_sanctuary_1794482113239.jpg', repaired: '/images/plant_golden_pothos_1794534018954.webp' },
+  { species: 'Marketplace Compost, Seaweed & Secateurs', previous: 'Misapplied Fiddle Leaf Fig / Monstera / Tulsi photos', repaired: '/images/marketplace/vermicompost.webp' },
 ];
 
 export interface NutrientDeficiencyProfile {
@@ -291,7 +126,7 @@ export const DIAGNOSTIC_SAMPLES: DiagnosticSamplePreset[] = [
     label: 'Ficus lyrata — Lower Leaf Yellowing & Edema',
     plantName: 'Fiddle Leaf Fig (Ficus lyrata)',
     mode: 'disease',
-    imageUrl: '/src/assets/images/plant_fiddle_leaf_fig_1794482115866.jpg',
+    imageUrl: BOTANICAL_IMAGES.fiddleLeafFig,
     symptomsText: 'Two lower leaves showing interveinal yellowing with tiny reddish-brown pinpoint speckles near margins after irregular watering.',
   },
   {
@@ -299,7 +134,7 @@ export const DIAGNOSTIC_SAMPLES: DiagnosticSamplePreset[] = [
     label: 'Monstera deliciosa — Species & Fenestration Scan',
     plantName: 'Swiss Cheese Plant (Monstera deliciosa)',
     mode: 'identification',
-    imageUrl: '/src/assets/images/plant_monstera_deliciosa_1794482112942.jpg',
+    imageUrl: BOTANICAL_IMAGES.monsteraDeliciosa,
     symptomsText: 'Large cordate glossy emerald leaves with natural fenestrations, thick petioles, and aerial roots.',
   },
   {
@@ -307,7 +142,7 @@ export const DIAGNOSTIC_SAMPLES: DiagnosticSamplePreset[] = [
     label: 'Krishna Tulsi — Purple Stem & Leaf Vigour Check',
     plantName: 'Holy Basil (Ocimum tenuiflorum)',
     mode: 'nutrient',
-    imageUrl: '/src/assets/images/plant_tulsi_holy_basil_1794482114261.jpg',
+    imageUrl: BOTANICAL_IMAGES.tulsiHolyBasil,
     symptomsText: 'Aromatic serrated green leaves with purple inflorescences in terracotta pot; checking N-P-K and micronutrient balance.',
   },
 ];
@@ -317,6 +152,11 @@ export interface AcademyModule {
   title: string;
   level: 'Beginner' | 'Intermediate' | 'Masterclass';
   duration: string;
+  visualType: 'Real Photograph' | 'Botanical Illustration / Diagram';
+  imageUrl?: string;
+  diagramId?: 'root-respiration-aeration' | 'leaf-anatomy-stomata' | 'disease-vs-chlorosis';
+  caption: string;
+  sourceCredit: string;
   summary: string;
   greenySimpleExplanation: string;
   keySteps: string[];
@@ -331,6 +171,10 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     title: '01. The Root Respiration Secret: Why Overwatering Suffocates Plants',
     level: 'Beginner',
     duration: '6 min interactive lesson',
+    visualType: 'Botanical Illustration / Diagram',
+    diagramId: 'root-respiration-aeration',
+    caption: 'Rhizosphere diagram comparing oxygenated macropores (25% air pockets) against waterlogged anaerobic hypoxia.',
+    sourceCredit: 'MyPlantCare Botanical Academy Scientific Vector Diagram',
     summary: 'Plant roots require gaseous oxygen (O2) in macropores to generate ATP for nutrient uptake. Overwatering isn’t "too much water in one go"—it is watering too frequently so air pockets never refill.',
     greenySimpleExplanation: 'Think of soil like a sponge with tiny air tunnels! Roots breathe through those tunnels. If the sponge stays soggy 24/7, roots run out of breath and beneficial microbes turn anaerobic.',
     keySteps: [
@@ -351,6 +195,10 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     title: '02. Decoding Sunlight: Direct, Bright Indirect & DLI for Home Botanists',
     level: 'Intermediate',
     duration: '8 min interactive lesson',
+    visualType: 'Real Photograph',
+    imageUrl: BOTANICAL_IMAGES.monsteraDeliciosa,
+    caption: 'Monstera deliciosa specimen thriving under filtered Bright Indirect light to develop mature leaf fenestrations.',
+    sourceCredit: 'MyPlantCare Botanical Archive (Verified Species Photo)',
     summary: 'Human eyes adapt to dim indoor rooms, making a corner look "bright" when it actually receives less than 5% of outdoor Photosynthetically Active Radiation (PAR).',
     greenySimpleExplanation: 'Sunlight is plant food! What looks bright to our eyes inside a living room can feel like twilight to a sun-loving Hibiscus or Tulsi.',
     keySteps: [
@@ -371,6 +219,10 @@ export const ACADEMY_MODULES: AcademyModule[] = [
     title: '03. Bio-Rational Integrated Pest Management (IPM) Without Toxic Chemicals',
     level: 'Masterclass',
     duration: '10 min interactive lesson',
+    visualType: 'Real Photograph',
+    imageUrl: '/images/plants/azadirachta-indica.webp',
+    caption: 'Azadirachta indica (Neem) foliage — natural source of azadirachtin for pollinator-safe evening IPM sprays.',
+    sourceCredit: 'iNaturalist Research Grade (Mark McVeigh, CC0 1.0)',
     summary: 'Protect beneficial pollinators and indoor air quality using botanical azadirachtin, potassium salts of fatty acids, and predatory biocontrols.',
     greenySimpleExplanation: 'Instead of harsh chemicals that harm bees and pets, we use cold-pressed Neem oil, soap-nut wash, and good ladybugs to stop pests from multiplying!',
     keySteps: [
@@ -385,6 +237,78 @@ export const ACADEMY_MODULES: AcademyModule[] = [
       'During heavy monsoon downpours',
     ],
     correctIndex: 1,
+  },
+  {
+    id: 'leaf-morphology-stomata',
+    title: '04. Leaf Anatomy & Stomatal Guard Cells: How Plants Breathe & Transpire',
+    level: 'Beginner',
+    duration: '7 min interactive lesson',
+    visualType: 'Botanical Illustration / Diagram',
+    diagramId: 'leaf-anatomy-stomata',
+    caption: 'Annotated botanical diagram showing lamina, midrib, petiole, and lower-epidermis stomatal guard cells.',
+    sourceCredit: 'MyPlantCare Botanical Academy Morphology Diagram',
+    summary: 'Understanding leaf venation and stomatal density explains why dust blocks photosynthesis, why misting only briefly raises boundary humidity, and why foliar feeds enter best through undersides.',
+    greenySimpleExplanation: 'Think of stomata as tiny adjustable mouths underneath each leaf! Keeping leaves clean helps them inhale carbon dioxide effortlessly.',
+    keySteps: [
+      'Wipe broad tropical leaves (Ficus, Monstera, Rubber Plant) gently with a damp soft cloth every 10–14 days.',
+      'Apply organic foliar sprays lightly to leaf undersides during early morning when stomata are open.',
+      'Provide gentle air circulation so humid boundary layers refresh around stomatal pores.',
+    ],
+    quizQuestion: 'Where are microscopic stomatal pores most densely concentrated on most broadleaf plants?',
+    quizOptions: [
+      'Inside woody bark fissures',
+      'On the abaxial (underside) leaf epidermis',
+      'Strictly along the root tips',
+    ],
+    correctIndex: 1,
+  },
+  {
+    id: 'chlorosis-vs-pathogens',
+    title: '05. Diagnostic Field Guide: Distinguishing Nutrient Chlorosis from Fungal Leaf Spot',
+    level: 'Intermediate',
+    duration: '9 min interactive lesson',
+    visualType: 'Botanical Illustration / Diagram',
+    diagramId: 'disease-vs-chlorosis',
+    caption: 'Comparative diagnostic diagram: concentric necrotic fungal spots with yellow halos vs symmetric interveinal chlorosis.',
+    sourceCredit: 'MyPlantCare Plant Pathology Reference Diagram',
+    summary: 'Misreading magnesium or iron chlorosis as a fungal blight leads to unnecessary spraying, while mistaking fungal leaf spots for nutrient hunger delays isolation.',
+    greenySimpleExplanation: 'Nutrient hunger draws neat symmetric yellow patterns between leaf veins, whereas infections leave irregular dark bullseye spots that spread from splashy water!',
+    keySteps: [
+      'Check symmetry first: older-leaf symmetric interveinal yellowing points to mobile Magnesium (Mg) deficit; young shoots point to Iron (Fe).',
+      'Inspect dark lesions for yellow halos, sunken necrotic rings, or fungal spores—those indicate infectious pathology.',
+      'Prune actively sporulating leaves using alcohol-sanitized secateurs before treating.',
+    ],
+    quizQuestion: 'Symmetric yellow tissue between bright green veins on older lower leaves most strongly indicates:',
+    quizOptions: [
+      'Magnesium deficiency rather than contagious leaf-spot fungus',
+      'Acute mechanical wind tearing',
+      'Excessive potassium toxicity',
+    ],
+    correctIndex: 0,
+  },
+  {
+    id: 'tamil-pollinator-guilds',
+    title: '06. Tamil Heritage Pollinator & Companion Guilds (Tulsi, Hibiscus & Curry Leaf)',
+    level: 'Masterclass',
+    duration: '8 min interactive lesson',
+    visualType: 'Real Photograph',
+    imageUrl: BOTANICAL_IMAGES.hibiscusRed,
+    caption: 'Hibiscus rosa-sinensis (Semparuthi / செம்பருத்தி) blossom serving as a high-nectar pollinator beacon in tropical courtyard gardens.',
+    sourceCredit: 'MyPlantCare Botanical Archive (Verified Species Photo)',
+    summary: 'Poly-cropping sacred herbs like Krishna Tulsi alongside flowering Hibiscus and Citrus recruits solitary bees, hoverflies, and lacewings that naturally suppress aphids and whiteflies.',
+    greenySimpleExplanation: 'Pairing blooming Semparuthi with aromatic Thulasi invites friendly bees and hoverflies that protect your whole balcony garden for free!',
+    keySteps: [
+      'Group flowering nectar plants (Hibiscus, Marigold, Jasmine) beside fruiting kitchen crops for higher pollination rates.',
+      'Let 15–20% of Tulsi flower spikes (Manjari) bloom specifically for native stingless bees.',
+      'Avoid broad-spectrum neem drenches on open petals during morning pollinator peak hours.',
+    ],
+    quizQuestion: 'Why does planting Tagetes (Marigold) and Ocimum (Tulsi) near vegetable beds reduce pest outbreaks?',
+    quizOptions: [
+      'Aromatic volatiles confuse herbivore host-finding while attracting predatory hoverflies and parasitic wasps',
+      'Their roots freeze the surrounding topsoil',
+      'They absorb all nitrogen so aphids starve immediately',
+    ],
+    correctIndex: 0,
   },
 ];
 
@@ -410,7 +334,7 @@ export const MARKETPLACE_CATALOG: MarketplaceItem[] = [
     rating: '4.9 (142 reviews)',
     stockStatus: 'In Stock • Acclimatized in Aroid Bark Mix',
     specification: 'Rooted in 20cm breathable nursery pot with 5+ fenestrated leaves',
-    imageUrl: '/src/assets/images/plant_monstera_deliciosa_1794482112942.jpg',
+    imageUrl: BOTANICAL_IMAGES.monsteraDeliciosa,
   },
   {
     id: 'mkt-tulsi-kit',
@@ -421,7 +345,7 @@ export const MARKETPLACE_CATALOG: MarketplaceItem[] = [
     rating: '4.8 (218 reviews)',
     stockStatus: 'In Stock • 94% Lab Germination Tested',
     specification: 'Non-GMO open-pollinated seeds (250+ seeds) + cocopeat starter discs',
-    imageUrl: '/src/assets/images/plant_tulsi_holy_basil_1794482114261.jpg',
+    imageUrl: BOTANICAL_IMAGES.tulsiHolyBasil,
   },
   {
     id: 'mkt-ceramic-pot',
@@ -432,7 +356,7 @@ export const MARKETPLACE_CATALOG: MarketplaceItem[] = [
     rating: '4.9 (89 reviews)',
     stockStatus: 'In Stock • Hand-thrown Stoneware',
     specification: 'Dual drainage ports + matching brass drip reservoir tray',
-    imageUrl: '/src/assets/images/hero_botanical_sanctuary_1794482113239.jpg',
+    imageUrl: BOTANICAL_IMAGES.heroSanctuary,
   },
   {
     id: 'mkt-vermicompost',
@@ -443,7 +367,7 @@ export const MARKETPLACE_CATALOG: MarketplaceItem[] = [
     rating: '4.9 (310 reviews)',
     stockStatus: 'In Stock • Lab Certified C:N Ratio 14:1',
     specification: 'Enriched with Trichoderma viride, Pseudomonas & mycorrhizal fungi',
-    imageUrl: '/src/assets/images/plant_fiddle_leaf_fig_1794482115866.jpg',
+    imageUrl: '/images/marketplace/vermicompost.webp',
   },
   {
     id: 'mkt-seaweed',
@@ -454,7 +378,7 @@ export const MARKETPLACE_CATALOG: MarketplaceItem[] = [
     rating: '4.8 (176 reviews)',
     stockStatus: 'In Stock • 100% Organic Cytokinins & Auxins',
     specification: 'Dilute 2ml/L for lush leaf fenestrations and root stress recovery',
-    imageUrl: '/src/assets/images/plant_monstera_deliciosa_1794482112942.jpg',
+    imageUrl: '/images/marketplace/seaweed.webp',
   },
   {
     id: 'mkt-pruner',
@@ -465,6 +389,6 @@ export const MARKETPLACE_CATALOG: MarketplaceItem[] = [
     rating: '4.9 (124 reviews)',
     stockStatus: 'In Stock • Ergonomic Sap-Groove Blade',
     specification: 'Clean vascular cuts up to 18mm stem diameter without crushing phloem',
-    imageUrl: '/src/assets/images/plant_tulsi_holy_basil_1794482114261.jpg',
+    imageUrl: '/images/marketplace/secateurs.webp',
   },
 ];

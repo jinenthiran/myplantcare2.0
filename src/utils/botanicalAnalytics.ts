@@ -197,3 +197,65 @@ export function evaluateSoilCondition(input: SoilAssessmentInput) {
         : 'Maintain structure with 20% organic vermicompost, 15% perlite/pumice for aeration, and neem cake.',
   };
 }
+
+export function buildPlantImageHistory(
+  plant: {
+    id?: number | string;
+    name?: string;
+    imageUrl?: string | null;
+    photoGalleryJson?: string | null;
+  } | null | undefined,
+  diagnoses: Array<{
+    plantId?: number | null;
+    plantName?: string | null;
+    imageUrl?: string | null;
+    imagesJson?: string | null;
+  }> = []
+): string[] {
+  if (!plant) return [];
+  const urls: string[] = [];
+  const seen = new Set<string>();
+
+  const pushUnique = (raw: unknown) => {
+    if (typeof raw !== 'string') return;
+    const trimmed = raw.trim();
+    if (!trimmed || seen.has(trimmed)) return;
+    seen.add(trimmed);
+    urls.push(trimmed);
+  };
+
+  const parseArrayEntries = (rawJson: string | null | undefined) => {
+    if (!rawJson) return;
+    try {
+      const parsed = JSON.parse(rawJson);
+      if (Array.isArray(parsed)) {
+        for (const item of parsed) {
+          if (typeof item === 'string') pushUnique(item);
+          else if (item && typeof item.url === 'string') pushUnique(item.url);
+          else if (item && typeof item.imageUrl === 'string') pushUnique(item.imageUrl);
+          else if (item && typeof item.dataUrl === 'string') pushUnique(item.dataUrl);
+        }
+      }
+    } catch {
+      // ignore malformed JSON
+    }
+  };
+
+  parseArrayEntries(plant.photoGalleryJson);
+
+  const normalizedName = String(plant.name || '').trim().toLowerCase();
+  const matchingDiagnoses = diagnoses.filter((d) => {
+    if (plant.id != null && d.plantId != null && Number(d.plantId) === Number(plant.id)) return true;
+    return Boolean(normalizedName && String(d.plantName || '').trim().toLowerCase() === normalizedName);
+  });
+
+  // Oldest diagnosis first -> current plant photo last for natural time-lapse progression
+  for (const diag of [...matchingDiagnoses].reverse()) {
+    pushUnique(diag.imageUrl);
+    parseArrayEntries(diag.imagesJson);
+  }
+
+  pushUnique(plant.imageUrl);
+  return urls;
+}
+

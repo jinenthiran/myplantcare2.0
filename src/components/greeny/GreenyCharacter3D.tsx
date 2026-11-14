@@ -803,7 +803,8 @@ export const GreenyCharacter3D: React.FC<GreenyCharacter3DProps> = ({
     // 7. Animation Loop with Damping & Software-WebGL Pacing
     const animController = new GreenyAnimationController();
     const exprController = new GreenyExpressionController();
-    const clock = new THREE.Clock();
+    const startMs = performance.now();
+    let lastMs = startMs;
     let frameId = 0;
     let isDisposed = false;
 
@@ -830,8 +831,10 @@ export const GreenyCharacter3D: React.FC<GreenyCharacter3DProps> = ({
 
     const tick = () => {
       if (isDisposed) return;
-      const delta = Math.min(clock.getDelta(), 0.1);
-      const elapsed = clock.getElapsedTime();
+      const nowMs = performance.now();
+      const delta = Math.min((nowMs - lastMs) / 1000, 0.1);
+      lastMs = nowMs;
+      const elapsed = (nowMs - startMs) / 1000;
       const currentState = stateRef.current;
       const currentCustom = customRef.current;
       const dampLambda = 9.5;
@@ -1044,11 +1047,11 @@ export const GreenyCharacter3D: React.FC<GreenyCharacter3DProps> = ({
   if (webglFallback) {
     return (
       <div
-        className="relative flex flex-col items-center justify-center rounded-2xl border border-[#00C878]/30 p-4 text-center"
+        className="relative flex flex-col items-center justify-center rounded-2xl border border-[#00D69A]/35 p-4 text-center"
         style={{ background: `linear-gradient(180deg, ${envTheme.bgTop}, ${envTheme.bgBottom})` }}
       >
-        <div className="text-sm font-bold text-[#B7F76B]">GREENY 3D Companion ({animationState})</div>
-        <p className="text-xs text-[#F7F9F2]/80 mt-1">Your Little Botanical Friend is Ready!</p>
+        <div className="text-sm font-display font-bold text-[#C7F36B]">GREENY 3D Companion ({animationState})</div>
+        <p className="text-xs text-[#FAF7EE]/85 mt-1">Your Little Botanical Friend is Ready!</p>
       </div>
     );
   }
@@ -1059,8 +1062,8 @@ export const GreenyCharacter3D: React.FC<GreenyCharacter3DProps> = ({
         size === 'floating'
           ? 'w-20 h-20 rounded-full'
           : size === 'panel'
-          ? 'w-full h-40 rounded-2xl'
-          : 'w-full h-[360px] sm:h-[400px] rounded-2xl'
+          ? 'w-full h-40 rounded-xl'
+          : 'w-full h-[360px] sm:h-[400px] rounded-xl'
       }`}
       style={{
         background: `radial-gradient(circle at 50% 32%, ${envTheme.bgTop} 0%, ${envTheme.bgBottom} 100%)`,
@@ -1070,26 +1073,30 @@ export const GreenyCharacter3D: React.FC<GreenyCharacter3DProps> = ({
       <div
         ref={mountRef}
         className="w-full h-full cursor-pointer"
-        role="button"
-        tabIndex={0}
-        aria-label={`Interactive 3D GREENY Baby Plant Character in ${animationState} state. Click head to pat or leaves to wiggle.`}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            if (animationState === 'SLEEPING') {
-              onWakeUp?.();
-            } else {
-              onHeadPat?.();
-            }
-          }
-        }}
+        {...(size === 'floating'
+          ? { 'aria-hidden': true }
+          : {
+              role: 'button',
+              tabIndex: 0,
+              'aria-label': `Interactive 3D GREENY Baby Plant Character in ${animationState} state. Click head to pat or leaves to wiggle.`,
+              onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  if (animationState === 'SLEEPING') {
+                    onWakeUp?.();
+                  } else {
+                    onHeadPat?.();
+                  }
+                }
+              },
+            })}
       />
 
       {/* State-Specific 2D Semantic Overlays (Thinking Bubbles, Sleeping Zzz, Listening Sound Waves, Celebration Leaves) */}
       {animationState === 'THINKING' && size !== 'floating' && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute top-3 right-5 flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#071B12]/80 border border-[#B7F76B]/40 text-xs font-bold text-[#B7F76B]"
+          className="pointer-events-none absolute top-3 right-4 flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#10251D]/90 border border-[#C7F36B]/40 text-xs font-mono font-bold text-[#C7F36B]"
         >
           <span>• • ○</span>
           <span>? ?</span>
@@ -1099,7 +1106,7 @@ export const GreenyCharacter3D: React.FC<GreenyCharacter3DProps> = ({
       {animationState === 'SLEEPING' && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute top-2 right-3 px-2.5 py-0.5 rounded-full bg-[#071B12]/80 text-xs font-mono font-bold text-[#A7F3D0]"
+          className="pointer-events-none absolute top-2.5 right-3 px-2 py-0.5 rounded-lg bg-[#10251D]/90 border border-[#B6CDB4]/30 text-xs font-mono font-bold text-[#B6CDB4]"
         >
           Zzz...
         </div>
@@ -1108,9 +1115,9 @@ export const GreenyCharacter3D: React.FC<GreenyCharacter3DProps> = ({
       {animationState === 'LISTENING' && size !== 'floating' && (
         <div
           aria-hidden="true"
-          className="pointer-events-none absolute top-3 left-4 px-3 py-1 rounded-full bg-[#00C878]/20 border border-[#00C878] text-[11px] font-mono font-semibold text-[#B7F76B]"
+          className="pointer-events-none absolute top-3 left-4 px-2.5 py-1 rounded-lg bg-[#10251D]/90 border border-[#00D69A] text-[11px] font-mono font-semibold text-[#00D69A]"
         >
-          ((( Listening to You )))
+          ((( Listening )))
         </div>
       )}
 
@@ -1118,9 +1125,9 @@ export const GreenyCharacter3D: React.FC<GreenyCharacter3DProps> = ({
         size !== 'floating' && (
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute top-3 left-4 px-3 py-1 rounded-full bg-[#B7F76B]/20 border border-[#B7F76B]/50 text-[11px] font-semibold text-[#B7F76B]"
+            className="pointer-events-none absolute top-3 left-4 px-2.5 py-1 rounded-lg bg-[#10251D]/90 border border-[#C7F36B]/50 text-[11px] font-semibold text-[#C7F36B]"
           >
-            ✿ Crown Flower Blooming ✿
+            ✿ Crown Flower Blooming
           </div>
         )}
 
@@ -1128,7 +1135,7 @@ export const GreenyCharacter3D: React.FC<GreenyCharacter3DProps> = ({
       {interactionFeedback && size !== 'floating' && (
         <div
           role="status"
-          className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-full bg-[#00C878] text-[#071B12] text-xs font-bold shadow-lg whitespace-nowrap"
+          className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-lg bg-[#00D69A] text-[#10251D] text-xs font-bold shadow-lg whitespace-nowrap"
         >
           {interactionFeedback}
         </div>
@@ -1136,8 +1143,8 @@ export const GreenyCharacter3D: React.FC<GreenyCharacter3DProps> = ({
 
       {/* Interactive Petting Guide Label in Studio View */}
       {interactiveHint && size === 'studio' && !interactionFeedback && (
-        <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-xl bg-[#071B12]/80 border border-[#123D2A] text-[11px] text-[#F7F9F2]/85 whitespace-nowrap">
-          Tap GREENY’s Head for Head Pat · Tap Leaves to Wiggle · Double-Tap to Jump · Env: {envTheme.label}
+        <div className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 px-3.5 py-1 rounded-lg bg-[#10251D]/90 border border-[#174C38] text-[11px] text-[#FAF7EE]/85 whitespace-nowrap">
+          Tap Head to Pat · Tap Leaves to Wiggle · Triple-Tap to Jump · Env: {envTheme.label}
         </div>
       )}
     </div>

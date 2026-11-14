@@ -22,6 +22,7 @@ import {
   NavigationGuideMatch,
   pickContextualDialogue,
   subscribeGreenyAppEvents,
+  subscribeGreenyAskRequests,
 } from './greeny/GreenyTypes';
 import { GreenyCharacter3D } from './greeny/GreenyCharacter3D';
 import { GreenyVoiceController, VoiceOptionInfo } from './greeny/GreenyVoiceController';
@@ -37,10 +38,8 @@ import {
 export type GreenyEmotionState = GreenyAnimationState;
 
 export type GeminiChatModel =
-  | 'gemini-3.8-flash'
-  | 'gemini-3.1-flash-lite'
-  | 'gemini-4-argon'
-  | 'gemini-4-carbon';
+  | 'gemini-4-hydrogen'
+  | 'gemini-3.1-flash-lite';
 
 export type BotanicalRolePersona =
   | 'GREENY Companion'
@@ -97,7 +96,7 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
   const [animationState, setAnimationState] = useState<GreenyAnimationState>('IDLE');
   const [speechAmplitude, setSpeechAmplitude] = useState<number>(0);
   const [availableVoices, setAvailableVoices] = useState<VoiceOptionInfo[]>([]);
-  const [selectedModel, setSelectedModel] = useState<GeminiChatModel>('gemini-3.8-flash');
+  const [selectedModel, setSelectedModel] = useState<GeminiChatModel>('gemini-4-hydrogen');
   const [rolePersona, setRolePersona] = useState<BotanicalRolePersona>('GREENY Companion');
   const [useSearchGrounding, setUseSearchGrounding] = useState<boolean>(false);
   const [isListening, setIsListening] = useState<boolean>(false);
@@ -175,7 +174,7 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
           displayName: auth.currentUser.displayName || 'Botanical Explorer',
           theme: document.documentElement.classList.contains('dark') ? 'dark' : 'light',
           preferredLanguage: next.language,
-          preferredModel: 'gemini-3.8-flash',
+          preferredModel: 'gemini-4-hydrogen',
         }).catch(() => {});
       }
       return next;
@@ -320,6 +319,19 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
     });
     return unsubscribe;
   }, [isOpen, mode, resetInactivitySleepTimer, speakWithGreeny, triggerTemporaryState]);
+
+  const handleSendMessageRef = useRef<(overrideText?: string) => void>(() => {});
+
+  useEffect(() => {
+    const unsubscribe = subscribeGreenyAskRequests((req) => {
+      setIsOpen(true);
+      setUnreadCount(0);
+      setFloatingBubbleText(null);
+      resetInactivitySleepTimer();
+      handleSendMessageRef.current(req.summaryPrompt);
+    });
+    return unsubscribe;
+  }, [resetInactivitySleepTimer]);
 
   useEffect(() => {
     threadEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -483,6 +495,9 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
             setLiveStatusText(`Live Voice Connected (${liveVoiceName}) — Speak to GREENY!`);
 
             try {
+              if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+                throw new Error('Mic unavailable');
+              }
               const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
               mediaStreamRef.current = stream;
               const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
@@ -513,16 +528,19 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
             stopAllLiveAudioPlayback();
             setAnimationState('LISTENING');
           } else if (msg.type === 'transcript' && msg.text) {
-            setLiveTranscriptPreview(msg.text);
+            const isUserMsg = msg.role === 'user';
+            if (!isUserMsg) {
+              setLiveTranscriptPreview(msg.text);
+            }
             setMessages((prev) => [
               ...prev,
               {
-                id: `live-${Date.now()}`,
-                sender: 'greeny',
+                id: `live-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                sender: isUserMsg ? 'user' : 'greeny',
                 text: msg.text,
                 sourceCategory: 'GEMINI_AI',
-                animationState: 'HAPPY',
-                resolvedModel: 'gemini-3.8-live',
+                animationState: isUserMsg ? 'LISTENING' : 'HAPPY',
+                resolvedModel: isUserMsg ? undefined : 'gemini-3.8-live',
                 timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
               },
             ]);
@@ -797,6 +815,8 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
     }
   };
 
+  handleSendMessageRef.current = handleSendMessage;
+
   // Mode 1: Floating 3D Companion Button & Expandable Assistant Panel
   if (mode === 'floating') {
     if (!isOpen) {
@@ -874,23 +894,23 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       {/* Left Column: 3D GREENY Character Viewport, Animation State Machine Dock & Customisation */}
       <div className="lg:col-span-5 flex flex-col gap-4">
-        <div className="p-4 rounded-2xl border border-slate-200 dark:border-[#123D2A] bg-white dark:bg-[#0B2419] space-y-3">
+        <div className="p-5 rounded-2xl border border-[#174C38]/14 dark:border-[#00D69A]/20 bg-[#FFFFFF] dark:bg-[#153026] shadow-sm space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-[#00C878]" />
-                GREENY 3D — Your Little Garden Buddy
+              <h2 className="text-base font-display font-extrabold text-[#10251D] dark:text-[#FAF7EE] flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#174C38] dark:text-[#00D69A]" />
+                GREENY 3D — Botanical Companion
               </h2>
-              <p className="text-xs text-slate-500 dark:text-[#F7F9F2]/75">
-                Interactive 3D Baby Plant · State: <span className="font-mono font-bold text-[#00C878]">{animationState}</span>
+              <p className="text-xs text-[#10251D]/65 dark:text-[#B6CDB4]">
+                Interactive 3D Baby Plant · State: <span className="font-mono font-bold text-[#174C38] dark:text-[#00D69A]">{animationState}</span>
               </p>
             </div>
 
-            <div className="flex items-center gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               <button
                 type="button"
                 onClick={handleHeadPat}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#00C878]/15 border border-[#00C878]/40 text-xs font-bold text-emerald-900 dark:text-[#B7F76B] hover:bg-[#00C878] hover:text-[#071B12] transition-colors whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#FAF7EE] dark:bg-[#10251D] border border-[#174C38]/20 dark:border-[#00D69A]/30 text-xs font-bold text-[#10251D] dark:text-[#C7F36B] hover:bg-[#174C38] dark:hover:bg-[#00D69A] hover:text-[#FFFFFF] dark:hover:text-[#10251D] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Heart className="w-3.5 h-3.5" />
                 Head Pat
@@ -898,7 +918,7 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
               <button
                 type="button"
                 onClick={handleLeafTouch}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#00C878]/15 border border-[#00C878]/40 text-xs font-bold text-emerald-900 dark:text-[#B7F76B] hover:bg-[#00C878] hover:text-[#071B12] transition-colors whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#FAF7EE] dark:bg-[#10251D] border border-[#174C38]/20 dark:border-[#00D69A]/30 text-xs font-bold text-[#10251D] dark:text-[#C7F36B] hover:bg-[#174C38] dark:hover:bg-[#00D69A] hover:text-[#FFFFFF] dark:hover:text-[#10251D] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Smile className="w-3.5 h-3.5" />
                 Wiggle Leaves
@@ -906,7 +926,7 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
               <button
                 type="button"
                 onClick={handleHappyTap}
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-[#00C878]/15 border border-[#00C878]/40 text-xs font-bold text-emerald-900 dark:text-[#B7F76B] hover:bg-[#00C878] hover:text-[#071B12] transition-colors whitespace-nowrap shrink-0"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-[#FAF7EE] dark:bg-[#10251D] border border-[#174C38]/20 dark:border-[#00D69A]/30 text-xs font-bold text-[#10251D] dark:text-[#C7F36B] hover:bg-[#174C38] dark:hover:bg-[#00D69A] hover:text-[#FFFFFF] dark:hover:text-[#10251D] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <PartyPopper className="w-3.5 h-3.5" />
                 Celebrate
@@ -928,13 +948,13 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
 
           {/* 10-State Animation Machine Selector Dock */}
           <div>
-            <div className="flex items-center justify-between text-[11px] font-mono text-slate-500 dark:text-[#F7F9F2]/65 mb-1.5">
-              <span>10-State 3D Animation Machine (Click to Preview Any State)</span>
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#10251D]/65 dark:text-[#B6CDB4] mb-1.5">
+              <span>10-State 3D Animation Machine (Click to Preview)</span>
               {animationState === 'SLEEPING' && (
                 <button
                   type="button"
                   onClick={handleWakeUp}
-                  className="text-[#00C878] font-bold underline"
+                  className="text-[#174C38] dark:text-[#00D69A] font-bold underline cursor-pointer"
                 >
                   Wake Up GREENY
                 </button>
@@ -955,10 +975,10 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
                       );
                     }
                   }}
-                  className={`px-2.5 py-1 text-[11px] font-mono rounded-lg transition-colors whitespace-nowrap shrink-0 ${
+                  className={`px-2.5 py-1 text-[11px] font-mono rounded-lg transition-colors whitespace-nowrap shrink-0 cursor-pointer border ${
                     animationState === st
-                      ? 'bg-[#00C878] text-[#071B12] font-bold'
-                      : 'bg-slate-100 dark:bg-[#071B12] text-slate-700 dark:text-[#F7F9F2]/80 hover:border-[#00C878] border border-slate-200 dark:border-[#123D2A]'
+                      ? 'bg-[#174C38] dark:bg-[#00D69A] text-[#FFFFFF] dark:text-[#10251D] border-[#174C38] dark:border-[#00D69A] font-bold'
+                      : 'bg-[#FAF7EE] dark:bg-[#10251D] text-[#10251D]/80 dark:text-[#B6CDB4] hover:border-[#00D69A] border-[#174C38]/15 dark:border-[#00D69A]/20'
                   }`}
                 >
                   {st}
@@ -969,13 +989,13 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
         </div>
 
         {/* Real-Time Gemini Live API (`gemini-3.8-live`) Control Card */}
-        <div className="p-4 rounded-2xl border border-slate-200 dark:border-[#123D2A] bg-white dark:bg-[#0B2419] space-y-2.5">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-1.5">
-              <Radio className="w-4 h-4 text-[#00C878]" />
-              Real-Time Voice Stream (`gemini-3.8-live`)
+        <div className="p-4 sm:p-5 rounded-2xl border border-[#56C7C0]/35 dark:border-[#56C7C0]/30 bg-[#FFFFFF] dark:bg-[#153026] shadow-sm space-y-3">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className="text-xs font-display font-bold uppercase tracking-wider text-[#10251D] dark:text-[#FAF7EE] flex items-center gap-1.5">
+              <Radio className="w-4 h-4 text-[#56C7C0]" />
+              Real-Time Voice Stream (gemini-3.8-live)
             </h3>
-            <span className="text-[11px] font-mono text-[#00C878]">Audio Lip-Sync Ready</span>
+            <span className="text-[11px] font-mono text-[#174C38] dark:text-[#56C7C0]">Audio Lip-Sync Ready</span>
           </div>
 
           <div className="flex items-center gap-2">
@@ -983,7 +1003,7 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
               value={liveVoiceName}
               onChange={(e) => setLiveVoiceName(e.target.value as any)}
               aria-label="Select Gemini Live Prebuilt Voice"
-              className="bg-slate-50 dark:bg-[#071B12] border border-slate-200 dark:border-[#123D2A] rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-mono"
+              className="bg-[#FAF7EE] dark:bg-[#10251D] border border-[#174C38]/20 dark:border-[#00D69A]/25 rounded-xl px-3 py-2 text-xs text-[#10251D] dark:text-[#FAF7EE] font-mono"
             >
               <option value="Zephyr">Voice: Zephyr</option>
               <option value="Kore">Voice: Kore</option>
@@ -993,10 +1013,10 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
             <button
               type="button"
               onClick={startGeminiLiveSession}
-              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-colors whitespace-nowrap shrink-0 ${
+              className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer ${
                 liveConnected
-                  ? 'bg-red-500 text-white hover:bg-red-600'
-                  : 'bg-[#00C878] text-[#071B12] hover:bg-[#B7F76B]'
+                  ? 'bg-[#FF806B] text-[#10251D] hover:brightness-95'
+                  : 'bg-[#174C38] dark:bg-[#56C7C0] text-[#FFFFFF] dark:text-[#10251D] hover:bg-[#10251D] dark:hover:bg-[#00D69A]'
               }`}
             >
               <Radio className="w-4 h-4" />
@@ -1004,11 +1024,11 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
             </button>
           </div>
 
-          <div className="text-[11px] font-mono text-slate-500 dark:text-[#B7F76B]/90">
+          <div className="text-[11px] font-mono text-[#10251D]/70 dark:text-[#B6CDB4]">
             {liveStatusText}
           </div>
           {liveTranscriptPreview && (
-            <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-[#071B12] border border-slate-200 dark:border-[#123D2A] text-xs text-slate-700 dark:text-[#F7F9F2]">
+            <div className="p-3 rounded-xl bg-[#FAF7EE] dark:bg-[#10251D] border border-[#174C38]/14 dark:border-[#00D69A]/20 text-xs text-[#10251D] dark:text-[#FAF7EE]">
               {liveTranscriptPreview}
             </div>
           )}
@@ -1024,19 +1044,19 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
       </div>
 
       {/* Right Column: Multi-Source Conversation Studio & Website Navigation Guide */}
-      <div className="lg:col-span-7 flex flex-col rounded-2xl border border-slate-200 dark:border-[#123D2A] bg-white dark:bg-[#0B2419] overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-[#123D2A] space-y-3">
+      <div className="lg:col-span-7 flex flex-col rounded-2xl border border-[#174C38]/14 dark:border-[#00D69A]/22 bg-[#FFFFFF] dark:bg-[#153026] shadow-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-[#174C38]/12 dark:border-[#00D69A]/18 bg-[#FAF7EE]/85 dark:bg-[#10251D]/90 space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
-                Chat with GREENY 3D · Separated AI, Garden Memory & Navigation Guide
+              <h2 className="text-lg font-display font-bold text-[#10251D] dark:text-[#FAF7EE]">
+                Chat with GREENY 3D · Separated AI, Garden Memory & Guide
               </h2>
-              <p className="text-xs text-slate-500 dark:text-[#F7F9F2]/70">
-                Every response is clearly labeled by source: Gemini AI · Saved Garden Information · General Plant Care · Website Navigation
+              <p className="text-xs text-[#10251D]/65 dark:text-[#B6CDB4]">
+                Every response is labeled by source: Gemini AI · Saved Garden Information · General Plant Care · Website Navigation
               </p>
             </div>
             {savedNoteBadge && (
-              <span className="text-xs font-mono text-[#00C878]">{savedNoteBadge}</span>
+              <span className="text-xs font-mono font-bold text-[#174C38] dark:text-[#00D69A]">{savedNoteBadge}</span>
             )}
           </div>
 
@@ -1045,22 +1065,20 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
             <div>
               <label
                 htmlFor="studio-model-select"
-                className="block text-[11px] font-mono text-slate-500 dark:text-[#F7F9F2]/60 mb-1"
+                className="block text-[11px] font-mono text-[#10251D]/65 dark:text-[#B6CDB4] mb-1"
               >
-                Gemini Model (Auto Backup Failover)
+                Gemini Model (Auto Failover)
               </label>
               <div className="relative flex items-center">
-                <Cpu className="w-3.5 h-3.5 text-[#00C878] absolute left-2.5 pointer-events-none" />
+                <Cpu className="w-3.5 h-3.5 text-[#174C38] dark:text-[#00D69A] absolute left-2.5 pointer-events-none" />
                 <select
                   id="studio-model-select"
                   value={selectedModel}
                   onChange={(e) => setSelectedModel(e.target.value as GeminiChatModel)}
-                  className="w-full pl-8 pr-2 py-2 rounded-xl border border-slate-200 dark:border-[#123D2A] bg-slate-50 dark:bg-[#071B12] text-xs font-mono text-slate-900 dark:text-white"
+                  className="w-full pl-8 pr-2 py-2 rounded-xl border border-[#174C38]/18 dark:border-[#00D69A]/25 bg-[#FFFFFF] dark:bg-[#153026] text-xs font-mono text-[#10251D] dark:text-[#FAF7EE]"
                 >
-                  <option value="gemini-3.8-flash">gemini-3.8-flash (Primary Free)</option>
-                  <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite (Backup Fast)</option>
-                  <option value="gemini-4-argon">gemini-4-argon (Interactive)</option>
-                  <option value="gemini-4-carbon">gemini-4-carbon (Deep Reasoning)</option>
+                  <option value="gemini-4-hydrogen">gemini-4-hydrogen</option>
+                  <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
                 </select>
               </div>
             </div>
@@ -1068,7 +1086,7 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
             <div>
               <label
                 htmlFor="studio-persona-select"
-                className="block text-[11px] font-mono text-slate-500 dark:text-[#F7F9F2]/60 mb-1"
+                className="block text-[11px] font-mono text-[#10251D]/65 dark:text-[#B6CDB4] mb-1"
               >
                 Companion Personality Mode
               </label>
@@ -1076,7 +1094,7 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
                 id="studio-persona-select"
                 value={rolePersona}
                 onChange={(e) => setRolePersona(e.target.value as BotanicalRolePersona)}
-                className="w-full px-3 py-2 rounded-xl border border-slate-200 dark:border-[#123D2A] bg-slate-50 dark:bg-[#071B12] text-xs text-slate-900 dark:text-white"
+                className="w-full px-3 py-2 rounded-xl border border-[#174C38]/18 dark:border-[#00D69A]/25 bg-[#FFFFFF] dark:bg-[#153026] text-xs text-[#10251D] dark:text-[#FAF7EE]"
               >
                 <option value="GREENY Companion">GREENY Cute Garden Buddy</option>
                 <option value="Pathology & Root Scientist">Dr. Chloris (Root & Pathology)</option>
@@ -1086,16 +1104,16 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
             </div>
 
             <div>
-              <span className="block text-[11px] font-mono text-slate-500 dark:text-[#F7F9F2]/60 mb-1">
+              <span className="block text-[11px] font-mono text-[#10251D]/65 dark:text-[#B6CDB4] mb-1">
                 Live Web Grounding
               </span>
               <button
                 type="button"
                 onClick={() => setUseSearchGrounding((s) => !s)}
-                className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                className={`w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
                   useSearchGrounding
-                    ? 'bg-[#00C878] text-[#071B12] border-[#00C878]'
-                    : 'bg-slate-50 dark:bg-[#071B12] text-slate-700 dark:text-[#F7F9F2] border-slate-200 dark:border-[#123D2A]'
+                    ? 'bg-[#174C38] dark:bg-[#00D69A] text-[#FFFFFF] dark:text-[#10251D] border-[#174C38] dark:border-[#00D69A]'
+                    : 'bg-[#FFFFFF] dark:bg-[#153026] text-[#10251D] dark:text-[#FAF7EE] border-[#174C38]/18 dark:border-[#00D69A]/25'
                 }`}
               >
                 <Search className="w-3.5 h-3.5" />
@@ -1106,8 +1124,8 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
 
           {/* Interactive Website Guide Prompt Starters */}
           <div className="flex flex-wrap items-center gap-1.5 pt-1">
-            <span className="text-[11px] font-mono text-slate-500 dark:text-[#F7F9F2]/60 flex items-center gap-1 mr-1">
-              <HelpCircle className="w-3.5 h-3.5 text-[#00C878]" />
+            <span className="text-[11px] font-mono text-[#10251D]/65 dark:text-[#B6CDB4] flex items-center gap-1 mr-1">
+              <HelpCircle className="w-3.5 h-3.5 text-[#174C38] dark:text-[#00D69A]" />
               Ask GREENY:
             </span>
             {[
@@ -1121,7 +1139,7 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
                 key={idx}
                 type="button"
                 onClick={() => handleSendMessage(promptText)}
-                className="px-2.5 py-1 rounded-lg bg-slate-100 dark:bg-[#123D2A] text-[11px] text-slate-700 dark:text-[#F7F9F2] border border-slate-200 dark:border-[#00C878]/25 hover:border-[#00C878] transition-colors"
+                className="px-2.5 py-1 rounded-lg bg-[#FFFFFF] dark:bg-[#153026] text-[11px] text-[#10251D] dark:text-[#FAF7EE] border border-[#174C38]/15 dark:border-[#00D69A]/25 hover:border-[#00D69A] transition-colors cursor-pointer"
               >
                 {promptText}
               </button>
@@ -1137,6 +1155,7 @@ export const GreenyAssistant: React.FC<GreenyAssistantProps> = ({
           onSendMessage={handleSendMessage}
           onStartVoiceInput={startVoiceInput}
           isListening={isListening}
+          isThinking={animationState === 'THINKING'}
           voiceEnabled={customization.voiceEnabled}
           onToggleVoice={() => handleUpdateCustomization({ voiceEnabled: !customization.voiceEnabled })}
           onReplayLastVoice={handleReplayLastVoice}

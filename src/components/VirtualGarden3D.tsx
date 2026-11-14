@@ -13,8 +13,20 @@ import {
   Maximize2,
   Minimize2,
   CloudUpload,
+  Volume2,
+  VolumeX,
+  Camera,
+  AlertCircle,
+  X,
+  Download,
 } from 'lucide-react';
 import { auth, saveGardenLayoutToFirestore } from '../lib/firebase';
+import { BotanicalImage } from './ui/BotanicalImage';
+import { BOTANICAL_IMAGES } from '../utils/botanicalImageResolver';
+import {
+  AmbientNatureSoundEngine,
+  getEnvironmentSoundProfile,
+} from '../utils/ambientNatureSoundEngine';
 
 export interface VirtualPlantInstance {
   id: string;
@@ -51,6 +63,104 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
   const [dockCollapsed, setDockCollapsed] = useState<boolean>(false);
   const [isFullBleed, setIsFullBleed] = useState<boolean>(false);
   const [firestoreSyncMsg, setFirestoreSyncMsg] = useState<string | null>(null);
+  const [soundEnabled, setSoundEnabled] = useState<boolean>(false);
+  const [soundVolume, setSoundVolume] = useState<number>(0.55);
+
+  // Augmented Reality (AR) Mode State
+  const [isArMode, setIsArMode] = useState<boolean>(false);
+  const [arStream, setArStream] = useState<MediaStream | null>(null);
+  const [arError, setArError] = useState<string | null>(null);
+  const [arSnapshot, setArSnapshot] = useState<string | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const arStreamRef = useRef<MediaStream | null>(null);
+
+  const handleToggleAr = async () => {
+    if (isArMode) {
+      if (arStreamRef.current) {
+        arStreamRef.current.getTracks().forEach((t) => t.stop());
+        arStreamRef.current = null;
+      }
+      if (arStream) {
+        arStream.getTracks().forEach((t) => t.stop());
+        setArStream(null);
+      }
+      setIsArMode(false);
+      setArError(null);
+    } else {
+      setArError(null);
+      if (!navigator.mediaDevices || typeof navigator.mediaDevices.getUserMedia !== 'function') {
+        setArError('AR camera streaming is unavailable in this browser context. Please allow HTTPS camera permissions or use 3D Studio mode.');
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } },
+          audio: false,
+        });
+        arStreamRef.current = stream;
+        setArStream(stream);
+        setIsArMode(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
+        }
+      } catch (err) {
+        console.warn('AR camera unavailable or permission denied:', err);
+        setArError('Camera access denied or unavailable. Please ensure permissions allow camera access.');
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (isArMode && videoRef.current && arStream) {
+      videoRef.current.srcObject = arStream;
+    }
+  }, [isArMode, arStream]);
+
+  useEffect(() => {
+    return () => {
+      if (arStreamRef.current) {
+        arStreamRef.current.getTracks().forEach((t) => t.stop());
+        arStreamRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!arSnapshot) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setArSnapshot(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [arSnapshot]);
+
+  const handleTakeArSnapshot = () => {
+    const container = canvasMountRef.current;
+    if (!container) return;
+    const canvas = document.createElement('canvas');
+    const width = container.clientWidth || 800;
+    const height = container.clientHeight || 520;
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    if (videoRef.current && isArMode) {
+      try {
+        ctx.drawImage(videoRef.current, 0, 0, width, height);
+      } catch {
+        // ignore cross-origin/draw errors
+      }
+    }
+
+    const webglCanvas = container.querySelector('canvas');
+    if (webglCanvas) {
+      ctx.drawImage(webglCanvas, 0, 0, width, height);
+    }
+
+    const dataUrl = canvas.toDataURL('image/png');
+    setArSnapshot(dataUrl);
+  };
 
   const plantsRef = useRef<VirtualPlantInstance[]>(plants);
   plantsRef.current = plants;
@@ -62,6 +172,38 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
   lightingRef.current = lightingPreset;
 
   const rebuildScenePlantsRef = useRef<(() => void) | null>(null);
+  const soundEngineRef = useRef<AmbientNatureSoundEngine | null>(null);
+
+  const soundProfile = getEnvironmentSoundProfile(lightingPreset);
+
+  useEffect(() => {
+    soundEngineRef.current?.setEnvironment(lightingPreset);
+  }, [lightingPreset]);
+
+  useEffect(() => {
+    soundEngineRef.current?.setVolume(soundVolume);
+  }, [soundVolume]);
+
+  useEffect(() => {
+    return () => {
+      soundEngineRef.current?.dispose();
+      soundEngineRef.current = null;
+    };
+  }, []);
+
+  const handleToggleSound = async () => {
+    if (!soundEngineRef.current) {
+      soundEngineRef.current = new AmbientNatureSoundEngine();
+    }
+    if (soundEnabled) {
+      soundEngineRef.current.stop();
+      setSoundEnabled(false);
+    } else {
+      soundEngineRef.current.setVolume(soundVolume);
+      const started = await soundEngineRef.current.start(lightingPreset);
+      setSoundEnabled(started);
+    }
+  };
 
   useEffect(() => {
     const container = canvasMountRef.current;
@@ -81,9 +223,11 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
     const height = container.clientHeight || 520;
 
     const scene = new THREE.Scene();
-    if (mode !== 'hero') {
+    if (mode !== 'hero' && !isArMode) {
       scene.background = new THREE.Color(0x071b12);
       scene.fog = new THREE.FogExp2(0x071b12, 0.045);
+    } else if (isArMode) {
+      scene.background = null;
     }
 
     const camera = new THREE.PerspectiveCamera(42, width / height, 0.1, 100);
@@ -109,6 +253,11 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
 
     container.innerHTML = '';
     container.appendChild(renderer.domElement);
+
+    const handleContextLost = (event: Event) => {
+      event.preventDefault();
+    };
+    renderer.domElement.addEventListener('webglcontextlost', handleContextLost, false);
 
     const pmremGenerator = new THREE.PMREMGenerator(renderer);
     scene.environment = pmremGenerator.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -641,10 +790,11 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
       window.removeEventListener('resize', onResize);
       window.removeEventListener('keydown', onKeyDown);
       renderer.domElement.removeEventListener('pointerdown', onPointerDown);
+      renderer.domElement.removeEventListener('webglcontextlost', handleContextLost);
       controls.dispose();
       renderer.dispose();
     };
-  }, [mode, isFullBleed]);
+  }, [mode, isFullBleed, isArMode]);
 
   useEffect(() => {
     if (rebuildScenePlantsRef.current) {
@@ -722,8 +872,8 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
     <div
       className={
         isFullBleed
-          ? 'fixed inset-0 z-50 w-screen h-screen overflow-hidden bg-[#071B12]'
-          : `relative w-full overflow-hidden rounded-2xl border border-[#123D2A] bg-[#071B12] ${
+          ? 'fixed inset-0 z-50 w-screen h-screen overflow-hidden bg-[#10251D]'
+          : `relative w-full overflow-hidden rounded-2xl border border-[#174C38] bg-[#10251D] ${
               mode === 'hero' ? 'h-[440px] lg:h-[520px]' : 'h-[580px] lg:h-[660px]'
             }`
       }
@@ -732,41 +882,106 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
       {/* Atmospheric Glasshouse Backdrop for Hero 3D Sanctuary */}
       {mode === 'hero' && (
         <div className="pointer-events-none absolute inset-0">
-          <img
-            src="/src/assets/images/hero_botanical_sanctuary_1794482113239.jpg"
+          <BotanicalImage
+            src={BOTANICAL_IMAGES.heroSanctuary}
             alt="Botanical Sanctuary Conservatory Backdrop"
-            referrerPolicy="no-referrer"
-            className="w-full h-full object-cover opacity-35"
+            decorative
+            priority
+            aspectClassName="w-full h-full"
+            className="opacity-35"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#071B12] via-[#071B12]/40 to-[#071B12]/70" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#10251D] via-[#10251D]/45 to-[#10251D]/75" />
         </div>
+      )}
+
+      {/* Real-World AR Camera Stream Element */}
+      {isArMode && (
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none"
+        />
       )}
 
       {/* Dedicated isolated WebGL canvas mount */}
       <div ref={canvasMountRef} className="relative z-[1] w-full h-full" />
 
       {/* Minimal Top-Left Spec Label (100% unobstructed center viewport) */}
-      <div className="pointer-events-none absolute top-4 left-4 z-10 flex flex-col gap-1 bg-[#071B12]/95 px-3.5 py-2 rounded-xl border border-[#123D2A]">
-        <span className="text-xs font-medium text-[#B7F76B] tracking-wide">
-          {mode === 'hero' ? 'Real-Time 3D Botanical Bio-Sanctuary' : 'Interactive 3D Virtual Garden Conservatory'}
+      <div className="pointer-events-none absolute top-4 left-4 z-10 flex flex-col gap-1 bg-[#10251D]/92 px-3.5 py-2 rounded-xl border border-[#174C38]">
+        <span className="text-xs font-display font-semibold text-[#C7F36B] tracking-wide">
+          {mode === 'hero' ? 'Real-Time 3D Botanical Conservatory' : 'Interactive 3D Virtual Garden Conservatory'}
         </span>
-        <span className="text-xs text-[#F7F9F2]/80 tabular-nums">
+        <span className="text-xs text-[#FAF7EE]/85 tabular-nums">
           {mode === 'hero'
             ? 'Specimen: Monstera deliciosa · Health 95% · PAR 420 µmol/m²/s'
             : `${plants.length} Active 3D Specimens · Selected: ${selectedPlant?.name || 'None'}`}
         </span>
         {firestoreSyncMsg && (
-          <span className="text-[11px] font-mono text-[#00C878]">{firestoreSyncMsg}</span>
+          <span className="text-[11px] font-mono text-[#00D69A]">{firestoreSyncMsg}</span>
         )}
       </div>
 
-      {/* Top-Right Full-Bleed (100vw x 100vh) & Firestore Sync Actions in Studio Mode */}
+      {/* Top-Right Full-Bleed (100vw x 100vh), Ambient Nature Sound & Firestore Sync Actions in Studio Mode */}
       {mode === 'studio' && (
-        <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+        <div className="absolute top-4 right-4 z-10 flex flex-wrap items-center justify-end gap-2">
+          <button
+            type="button"
+            onClick={handleToggleSound}
+            data-testid="garden-sound-toggle"
+            aria-pressed={soundEnabled}
+            title={soundProfile.description}
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border rounded-xl transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+              soundEnabled
+                ? 'bg-[#00D69A] text-[#10251D] border-[#00D69A]'
+                : 'bg-[#10251D]/92 text-[#FAF7EE] border-[#174C38] hover:border-[#00D69A]'
+            }`}
+          >
+            {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5 text-[#C7F36B]" />}
+            {soundEnabled ? `Sound: ${soundProfile.shortLabel}` : 'Nature Sound Off'}
+          </button>
+          {soundEnabled && (
+            <label className="hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-[#10251D]/92 border border-[#174C38] text-[11px] text-[#C7F36B]">
+              <span>Vol</span>
+              <input
+                type="range"
+                min="0.1"
+                max="1"
+                step="0.05"
+                value={soundVolume}
+                onChange={(e) => setSoundVolume(Number(e.target.value))}
+                aria-label="Ambient nature sound volume"
+                className="w-16 accent-[#00D69A]"
+              />
+            </label>
+          )}
+          <button
+            type="button"
+            onClick={handleToggleAr}
+            data-testid="ar-mode-toggle"
+            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-semibold border rounded-xl transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+              isArMode
+                ? 'bg-[#00D69A] text-[#10251D] border-[#00D69A] ring-2 ring-[#C7F36B]/60'
+                : 'bg-[#10251D]/92 text-[#FAF7EE] border-[#174C38] hover:border-[#00D69A]'
+            }`}
+          >
+            <Camera className="w-3.5 h-3.5" />
+            {isArMode ? 'Exit AR Camera' : 'AR Real-World Projection'}
+          </button>
+          {isArMode && (
+            <button
+              type="button"
+              onClick={handleTakeArSnapshot}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#C7F36B] text-[#10251D] border border-[#C7F36B] rounded-xl hover:bg-[#FAF7EE] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
+            >
+              <Camera className="w-3.5 h-3.5" /> Snapshot AR
+            </button>
+          )}
           <button
             type="button"
             onClick={handleSaveLayoutToFirestore}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#071B12]/95 text-[#00C878] border border-[#123D2A] rounded-xl hover:border-[#00C878] transition-colors whitespace-nowrap shrink-0"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#10251D]/92 text-[#00D69A] border border-[#174C38] rounded-xl hover:border-[#00D69A] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
           >
             <CloudUpload className="w-3.5 h-3.5" /> Sync to Firestore
           </button>
@@ -774,26 +989,42 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
             type="button"
             onClick={() => setIsFullBleed((f) => !f)}
             aria-label="Toggle Full-Bleed 100vw x 100vh 3D Viewport"
-            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#071B12]/95 text-[#F7F9F2] border border-[#123D2A] rounded-xl hover:border-[#00C878] transition-colors whitespace-nowrap shrink-0"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold bg-[#10251D]/92 text-[#FAF7EE] border border-[#174C38] rounded-xl hover:border-[#00D69A] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
           >
-            {isFullBleed ? <Minimize2 className="w-3.5 h-3.5 text-[#B7F76B]" /> : <Maximize2 className="w-3.5 h-3.5 text-[#B7F76B]" />}
+            {isFullBleed ? <Minimize2 className="w-3.5 h-3.5 text-[#C7F36B]" /> : <Maximize2 className="w-3.5 h-3.5 text-[#C7F36B]" />}
             {isFullBleed ? 'Exit Full-Bleed' : 'Full-Bleed 100vw×100vh'}
           </button>
         </div>
       )}
 
-      {/* Hero Bottom Telemetry Strip */}
+      {/* Hero Bottom Strip + Compact Nature Audio Toggle */}
       {mode === 'hero' && (
-        <div className="pointer-events-none absolute bottom-4 inset-x-4 z-10 flex flex-wrap items-center justify-between gap-2 bg-[#071B12]/95 px-4 py-2.5 rounded-xl border border-[#123D2A] text-xs">
-          <span className="text-[#F7F9F2]/85">Interactive 3D Scene: Drag to Orbit · Scroll to Zoom</span>
-          <span className="font-mono text-[#00C878]">Rhizosphere Moisture: 56% · Canopy Temp: 24.5°C</span>
+        <div className="pointer-events-none absolute bottom-4 inset-x-4 z-10 flex flex-wrap items-center justify-between gap-2 bg-[#10251D]/92 px-4 py-2 rounded-xl border border-[#174C38] text-xs">
+          <span className="text-[#FAF7EE]/85">Interactive 3D Scene: Drag to Orbit · Scroll to Zoom</span>
+          <div className="flex items-center gap-3 pointer-events-auto">
+            <span className="hidden sm:inline font-mono text-[#00D69A]">Rhizosphere Moisture: 56% · Canopy Temp: 24.5°C</span>
+            <button
+              type="button"
+              onClick={handleToggleSound}
+              data-testid="hero-sound-toggle"
+              aria-pressed={soundEnabled}
+              className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-[11px] font-semibold transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                soundEnabled
+                  ? 'bg-[#00D69A] text-[#10251D] border-[#00D69A]'
+                  : 'bg-[#174C38] text-[#FAF7EE] border-[#174C38] hover:border-[#00D69A]'
+              }`}
+            >
+              {soundEnabled ? <Volume2 className="w-3 h-3" /> : <VolumeX className="w-3 h-3 text-[#C7F36B]" />}
+              {soundEnabled ? soundProfile.shortLabel : 'Sound Off'}
+            </button>
+          </div>
         </div>
       )}
 
-      {/* Collapsible Bottom Control Dock (<= 15% Viewport Footprint, Solid rgba Surface, Centered) */}
+      {/* Collapsible Bottom Control Dock (<= 15% Viewport Footprint, Solid Surface, Centered) */}
       {mode === 'studio' && (
         <div
-          className="absolute bottom-4 inset-x-4 mx-auto z-10 max-w-[920px] transition-transform duration-200"
+          className="absolute bottom-4 inset-x-4 mx-auto z-10 max-w-[940px] transition-transform duration-200"
           style={{
             transform: dockCollapsed ? 'translateY(calc(100% - 36px))' : 'translateY(0)',
           }}
@@ -802,42 +1033,42 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
             <button
               type="button"
               onClick={() => setDockCollapsed((prev) => !prev)}
-              className="flex items-center gap-1.5 px-3.5 py-1 text-xs font-medium text-[#F7F9F2] bg-[#071B12]/95 border border-[#123D2A] rounded-t-lg hover:border-[#00C878] transition-colors whitespace-nowrap shrink-0"
+              className="flex items-center gap-1.5 px-3.5 py-1 text-xs font-medium text-[#FAF7EE] bg-[#10251D]/95 border border-[#174C38] rounded-t-lg hover:border-[#00D69A] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
             >
               {dockCollapsed ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
               {dockCollapsed ? 'Show 3D Garden Controls (H)' : 'Hide Controls (H)'}
             </button>
           </div>
 
-          <div className="bg-[#071B12]/95 border border-[#123D2A] rounded-xl p-3.5 shadow-xl flex flex-wrap items-center justify-between gap-3">
+          <div className="bg-[#10251D]/95 border border-[#174C38] rounded-xl p-3.5 shadow-xl flex flex-wrap items-center justify-between gap-3">
             {/* Add Plant Controls */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs text-[#F7F9F2]/70 mr-1">Add Specimen:</span>
+              <span className="text-xs text-[#B6CDB4] mr-1">Add Specimen:</span>
               <button
                 type="button"
                 onClick={() => handleAddPlant('monstera', 'Monstera Deliciosa')}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#123D2A] text-[#F7F9F2] rounded-lg hover:bg-[#00C878] hover:text-[#071B12] transition-colors whitespace-nowrap shrink-0"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#153026] border border-[#174C38] text-[#FAF7EE] rounded-lg hover:bg-[#00D69A] hover:text-[#10251D] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Monstera
               </button>
               <button
                 type="button"
                 onClick={() => handleAddPlant('tulsi', 'Sacred Krishna Tulsi')}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#123D2A] text-[#F7F9F2] rounded-lg hover:bg-[#00C878] hover:text-[#071B12] transition-colors whitespace-nowrap shrink-0"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#153026] border border-[#174C38] text-[#FAF7EE] rounded-lg hover:bg-[#00D69A] hover:text-[#10251D] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Tulsi
               </button>
               <button
                 type="button"
                 onClick={() => handleAddPlant('ficus', 'Fiddle Leaf Fig')}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#123D2A] text-[#F7F9F2] rounded-lg hover:bg-[#00C878] hover:text-[#071B12] transition-colors whitespace-nowrap shrink-0"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#153026] border border-[#174C38] text-[#FAF7EE] rounded-lg hover:bg-[#00D69A] hover:text-[#10251D] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Ficus
               </button>
               <button
                 type="button"
                 onClick={() => handleAddPlant('palm', 'Areca Palm')}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#123D2A] text-[#F7F9F2] rounded-lg hover:bg-[#00C878] hover:text-[#071B12] transition-colors whitespace-nowrap shrink-0"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#153026] border border-[#174C38] text-[#FAF7EE] rounded-lg hover:bg-[#00D69A] hover:text-[#10251D] transition-colors whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Areca Palm
               </button>
@@ -845,14 +1076,14 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
 
             {/* Arrange & Pot Style Controls */}
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs text-[#F7F9F2]/70 flex items-center gap-1">
-                <Move className="w-3.5 h-3.5 text-[#00C878]" /> Move Selected:
+              <span className="text-xs text-[#B6CDB4] flex items-center gap-1">
+                <Move className="w-3.5 h-3.5 text-[#00D69A]" /> Move Selected:
               </span>
               <button
                 type="button"
                 onClick={() => handleNudgeSelected(-0.45, 0)}
                 aria-label="Move selected plant West"
-                className="px-2.5 py-1.5 text-xs font-mono bg-[#123D2A]/80 text-[#F7F9F2] rounded-lg hover:bg-[#123D2A] whitespace-nowrap shrink-0"
+                className="px-2.5 py-1.5 text-xs font-mono bg-[#153026] border border-[#174C38] text-[#FAF7EE] rounded-lg hover:border-[#00D69A] whitespace-nowrap shrink-0 cursor-pointer"
               >
                 ← X
               </button>
@@ -860,7 +1091,7 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
                 type="button"
                 onClick={() => handleNudgeSelected(0.45, 0)}
                 aria-label="Move selected plant East"
-                className="px-2.5 py-1.5 text-xs font-mono bg-[#123D2A]/80 text-[#F7F9F2] rounded-lg hover:bg-[#123D2A] whitespace-nowrap shrink-0"
+                className="px-2.5 py-1.5 text-xs font-mono bg-[#153026] border border-[#174C38] text-[#FAF7EE] rounded-lg hover:border-[#00D69A] whitespace-nowrap shrink-0 cursor-pointer"
               >
                 X →
               </button>
@@ -868,7 +1099,7 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
                 type="button"
                 onClick={() => handleNudgeSelected(0, -0.45)}
                 aria-label="Move selected plant North"
-                className="px-2.5 py-1.5 text-xs font-mono bg-[#123D2A]/80 text-[#F7F9F2] rounded-lg hover:bg-[#123D2A] whitespace-nowrap shrink-0"
+                className="px-2.5 py-1.5 text-xs font-mono bg-[#153026] border border-[#174C38] text-[#FAF7EE] rounded-lg hover:border-[#00D69A] whitespace-nowrap shrink-0 cursor-pointer"
               >
                 ↑ Z
               </button>
@@ -876,14 +1107,14 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
                 type="button"
                 onClick={() => handleNudgeSelected(0, 0.45)}
                 aria-label="Move selected plant South"
-                className="px-2.5 py-1.5 text-xs font-mono bg-[#123D2A]/80 text-[#F7F9F2] rounded-lg hover:bg-[#123D2A] whitespace-nowrap shrink-0"
+                className="px-2.5 py-1.5 text-xs font-mono bg-[#153026] border border-[#174C38] text-[#FAF7EE] rounded-lg hover:border-[#00D69A] whitespace-nowrap shrink-0 cursor-pointer"
               >
                 Z ↓
               </button>
               <button
                 type="button"
                 onClick={handleCyclePotStyle}
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#D4B56A]/20 text-[#D4B56A] border border-[#D4B56A]/40 rounded-lg hover:bg-[#D4B56A]/30 whitespace-nowrap shrink-0"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#F5CA62]/15 text-[#F5CA62] border border-[#F5CA62]/40 rounded-lg hover:bg-[#F5CA62]/25 whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Sparkles className="w-3.5 h-3.5" /> Cycle Pot Material
               </button>
@@ -893,12 +1124,24 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
+                onClick={handleToggleSound}
+                className={`flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap shrink-0 border cursor-pointer ${
+                  soundEnabled
+                    ? 'bg-[#00D69A] text-[#10251D] border-[#00D69A] font-bold'
+                    : 'bg-[#153026] text-[#FAF7EE] border-[#174C38] hover:border-[#00D69A]'
+                }`}
+              >
+                {soundEnabled ? <Volume2 className="w-3.5 h-3.5" /> : <VolumeX className="w-3.5 h-3.5 text-[#C7F36B]" />}
+                <span>Ambience: {soundEnabled ? soundProfile.shortLabel : 'Off'}</span>
+              </button>
+              <button
+                type="button"
                 onClick={() =>
                   setLightingPreset((prev) =>
                     prev === 'golden' ? 'daylight' : prev === 'daylight' ? 'bioluminescent' : 'golden'
                   )
                 }
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#123D2A] text-[#B7F76B] rounded-lg hover:bg-[#123D2A]/80 whitespace-nowrap shrink-0"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#153026] border border-[#174C38] text-[#C7F36B] rounded-lg hover:border-[#00D69A] whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <Sun className="w-3.5 h-3.5" /> Light: {lightingPreset}
               </button>
@@ -906,12 +1149,79 @@ export const VirtualGarden3D: React.FC<VirtualGarden3DProps> = ({
                 type="button"
                 onClick={() => setPlants(DEFAULT_GARDEN_PLANTS)}
                 aria-label="Reset 3D garden layout"
-                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#123D2A]/60 text-[#F7F9F2]/80 rounded-lg hover:text-white whitespace-nowrap shrink-0"
+                className="flex items-center gap-1 px-2.5 py-1.5 text-xs font-medium bg-[#153026] border border-[#174C38] text-[#B6CDB4] rounded-lg hover:text-[#FAF7EE] whitespace-nowrap shrink-0 cursor-pointer"
               >
                 <RotateCcw className="w-3.5 h-3.5" /> Reset
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* AR Snapshot Preview Modal */}
+      {arSnapshot && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="AR Sanctuary Projection Captured"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setArSnapshot(null);
+          }}
+          className="absolute inset-0 z-50 bg-[#10251D]/88 flex items-center justify-center p-4"
+        >
+          <div className="bg-[#153026] border border-[#00D69A] rounded-2xl p-6 max-w-lg w-full shadow-2xl relative space-y-4 text-[#FAF7EE]">
+            <button
+              type="button"
+              onClick={() => setArSnapshot(null)}
+              aria-label="Close AR Snapshot Preview"
+              className="absolute top-4 right-4 text-[#00D69A] hover:text-white cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+            <h3 className="text-lg font-display font-bold text-[#C7F36B] flex items-center gap-2">
+              <Camera className="w-5 h-5 text-[#00D69A]" /> AR Sanctuary Projection Captured
+            </h3>
+            <p className="text-xs text-[#B6CDB4]">
+              Your 3D virtual plant collection has been projected into your real-world room environment.
+            </p>
+            <div className="rounded-xl overflow-hidden border border-[#00D69A]/35 max-h-[320px] flex items-center justify-center bg-[#10251D]">
+              <img src={arSnapshot} alt="AR Sanctuary Snapshot" className="max-h-[300px] object-contain" />
+            </div>
+            <div className="flex justify-end gap-3 pt-2">
+              <a
+                href={arSnapshot}
+                download={`greeny-ar-sanctuary-${Date.now()}.png`}
+                className="flex items-center gap-2 px-4 py-2 bg-[#00D69A] text-[#10251D] font-bold text-xs rounded-xl hover:bg-[#C7F36B] transition-colors"
+              >
+                <Download className="w-4 h-4" /> Download AR Photo
+              </a>
+              <button
+                type="button"
+                onClick={() => setArSnapshot(null)}
+                className="px-4 py-2 bg-[#10251D] border border-[#174C38] text-[#FAF7EE] font-semibold text-xs rounded-xl hover:border-[#00D69A] transition-colors cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AR Error Banner */}
+      {arError && (
+        <div className="absolute top-16 inset-x-4 z-20 bg-[#10251D]/95 border border-[#FF806B] text-[#FAF7EE] text-xs px-4 py-3 rounded-xl flex items-center justify-between shadow-xl">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-[#FF806B] shrink-0" />
+            <span>{arError}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setArError(null)}
+            aria-label="Dismiss AR error"
+            className="text-[#FF806B] hover:text-white font-bold ml-2 cursor-pointer"
+          >
+            ✕
+          </button>
         </div>
       )}
     </div>

@@ -32,4 +32,7 @@ test('Firestore Rules reject Dirty Dozen: unverified email, ID poisoning, shadow
   // 10 & 11 & 12. Relational existence & secure list query enforcement
   assert.match(rulesText, /exists\(\/databases\/\$\(database\)\/documents\/users\/\$\(request\.auth\.uid\)\)/);
   assert.match(rulesText, /allow\s+list:\s*if\s+isSignedIn\(\)\s*&&\s*\(resource\.data\.userId\s*==\s*request\.auth\.uid\s*\|\|\s*isAdmin\(\)\)/);
+  assert.match(rulesText, /isValidImageCorrectionAudit\(incoming\(\)\)/);
+  assert.match(rulesText, /match\s+\/imageCorrectionAudits\/\{auditId\}/);
 });
+

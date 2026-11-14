@@ -8,6 +8,7 @@
    - `/users/{userId}`: Only the user whose `request.auth.uid == userId` (or a verified admin) can `get`, `create`, or `update` their preference document. No blanket `list` is allowed on `/users`.
    - `/botanicalNotes/{noteId}`: `userId` in `incoming()` must equal `request.auth.uid`, and the parent `/users/$(request.auth.uid)` preference document must exist (`exists()`). `allow list` strictly enforces `resource.data.userId == request.auth.uid`.
    - `/gardenLayouts/{layoutId}`: `userId` in `incoming()` must equal `request.auth.uid`, and the parent `/users/$(request.auth.uid)` preference document must exist (`exists()`). `allow list` strictly enforces `resource.data.userId == request.auth.uid`.
+   - `/imageCorrectionAudits/{auditId}`: `userId` in `incoming()` must equal `request.auth.uid`, `plantId` must match `^[a-zA-Z0-9_\-]+$`, `actionType` must be one of `['flagged', 'verified_override', 'reverted']`, and the parent `/users/$(request.auth.uid)` preference document must exist (`exists()`). `allow list` strictly enforces `resource.data.userId == request.auth.uid || isAdmin()`.
 5. **Temporal Integrity & Immutability**:
    - `createdAt == request.time` and `updatedAt == request.time` on `create`.
    - `createdAt == resource.data.createdAt`, `userId == resource.data.userId`, and `updatedAt == request.time` on `update`.
@@ -22,6 +23,7 @@
 7. **Denial-of-Wallet String Overflow**: Creating `/botanicalNotes/note_1` with `noteText` > 1000 chars -> `PERMISSION_DENIED`.
 8. **Immutable Field Tampering (`userId` / `createdAt`)**: Updating `/botanicalNotes/note_1` with modified `createdAt` or `userId` -> `PERMISSION_DENIED`.
 9. **Client Timestamp Forgery**: Creating `/gardenLayouts/layout_1` with a forged past/future `createdAt` instead of `request.time` -> `PERMISSION_DENIED`.
-10. **Invalid Enum State Injection**: Setting `lightingPreset: "nuclear"` on `/gardenLayouts/layout_1` -> `PERMISSION_DENIED`.
-11. **Orphaned Sub-Entity Creation**: Creating `/botanicalNotes/note_1` when `/users/$(request.auth.uid)` does not exist -> `PERMISSION_DENIED`.
-12. **Cross-Tenant Read/List**: User `uid_A` attempting `get` or `list` on `/botanicalNotes` owned by `uid_B` -> `PERMISSION_DENIED`.
+10. **Invalid Enum State Injection**: Setting `lightingPreset: "nuclear"` on `/gardenLayouts/layout_1` or `actionType: "hack"` on `/imageCorrectionAudits/audit_1` -> `PERMISSION_DENIED`.
+11. **Orphaned Sub-Entity Creation**: Creating `/botanicalNotes/note_1` or `/imageCorrectionAudits/audit_1` when `/users/$(request.auth.uid)` does not exist -> `PERMISSION_DENIED`.
+12. **Cross-Tenant Read/List**: User `uid_A` attempting `get` or `list` on `/botanicalNotes` or `/imageCorrectionAudits` owned by `uid_B` -> `PERMISSION_DENIED`.
+

@@ -66,16 +66,16 @@ export const GreenyAssistantPanel: React.FC<GreenyAssistantPanelProps> = ({
     <div
       role="dialog"
       aria-label="GREENY 3D Botanical Companion Panel"
-      className="fixed bottom-4 right-4 z-50 w-[370px] sm:w-[435px] max-h-[85vh] flex flex-col rounded-2xl border border-[#123D2A] bg-white dark:bg-[#071B12] text-slate-900 dark:text-[#F7F9F2] shadow-2xl overflow-hidden"
+      className="fixed bottom-4 right-4 z-50 w-[370px] sm:w-[440px] max-h-[85vh] flex flex-col rounded-2xl border border-[#174C38]/20 dark:border-[#00D69A]/30 bg-[#FAF7EE] dark:bg-[#10251D] text-[#10251D] dark:text-[#FAF7EE] shadow-2xl overflow-hidden"
     >
       {/* Panel Header */}
-      <div className="flex items-center justify-between gap-2 px-4 py-3 bg-[#123D2A] text-white border-b border-[#00C878]/25">
+      <div className="flex items-center justify-between gap-2 px-4 py-3 bg-gradient-to-r from-[#10251D] to-[#174C38] text-[#FAF7EE] border-b border-[#00D69A]/30">
         <div>
           <div className="flex items-center gap-2">
-            <h3 className="text-sm font-extrabold tracking-tight text-white">GREENY 3D</h3>
-            <span className="text-[11px] font-mono text-[#B7F76B]">· Online ({animationState})</span>
+            <h3 className="text-sm font-display font-extrabold tracking-tight text-[#FFFFFF]">GREENY 3D</h3>
+            <span className="text-[11px] font-mono text-[#00D69A]">· {animationState}</span>
           </div>
-          <p className="text-[11px] text-[#A7F3D0]">Your Little Garden Buddy</p>
+          <p className="text-[11px] text-[#B6CDB4]">Observatory Plant Companion</p>
         </div>
 
         <div className="flex items-center gap-1">
@@ -83,10 +83,10 @@ export const GreenyAssistantPanel: React.FC<GreenyAssistantPanelProps> = ({
             type="button"
             onClick={() => setShowCustomiseDrawer((s) => !s)}
             title="Voice & 3D Character Customisation"
-            className={`px-2 py-1 rounded-lg text-[11px] font-semibold transition-colors whitespace-nowrap shrink-0 flex items-center gap-1 ${
+            className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors whitespace-nowrap shrink-0 flex items-center gap-1 cursor-pointer ${
               showCustomiseDrawer
-                ? 'bg-[#00C878] text-[#071B12]'
-                : 'bg-[#071B12]/70 text-[#B7F76B] border border-[#00C878]/30 hover:bg-[#071B12]'
+                ? 'bg-[#00D69A] text-[#10251D]'
+                : 'bg-[#10251D]/80 text-[#C7F36B] border border-[#00D69A]/35 hover:bg-[#10251D]'
             }`}
           >
             <Sliders className="w-3 h-3" />
@@ -99,7 +99,7 @@ export const GreenyAssistantPanel: React.FC<GreenyAssistantPanelProps> = ({
               onClick={onOpenFullStudio}
               aria-label="Expand to Full 3D Companion Studio"
               title="Open Full 3D Studio"
-              className="p-1.5 text-[#F7F9F2]/80 hover:text-[#B7F76B] rounded-lg"
+              className="p-1.5 text-[#FAF7EE]/80 hover:text-[#00D69A] rounded-lg cursor-pointer"
             >
               <Maximize2 className="w-3.5 h-3.5" />
             </button>
@@ -110,7 +110,7 @@ export const GreenyAssistantPanel: React.FC<GreenyAssistantPanelProps> = ({
             onClick={onMinimise}
             aria-label="Minimise GREENY Companion Panel"
             title="Minimise"
-            className="p-1.5 text-[#F7F9F2]/80 hover:text-white rounded-lg"
+            className="p-1.5 text-[#FAF7EE]/80 hover:text-[#FFFFFF] rounded-lg cursor-pointer"
           >
             <Minimize2 className="w-3.5 h-3.5" />
           </button>
@@ -120,7 +120,7 @@ export const GreenyAssistantPanel: React.FC<GreenyAssistantPanelProps> = ({
             onClick={onClose}
             aria-label="Close GREENY Companion Panel"
             title="Close"
-            className="p-1.5 text-[#F7F9F2]/80 hover:text-white rounded-lg"
+            className="p-1.5 text-[#FAF7EE]/80 hover:text-[#FFFFFF] rounded-lg cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -128,7 +128,7 @@ export const GreenyAssistantPanel: React.FC<GreenyAssistantPanelProps> = ({
       </div>
 
       {/* Interactive 3D Baby Plant Character Viewport */}
-      <div className="px-3 pt-2.5 pb-1 bg-[#071B12]">
+      <div className="px-3 pt-2.5 pb-1 bg-[#10251D]">
         <GreenyCharacter3D
           animationState={animationState}
           speechAmplitude={speechAmplitude}
@@ -140,7 +140,7 @@ export const GreenyAssistantPanel: React.FC<GreenyAssistantPanelProps> = ({
           onWakeUp={onWakeUp}
           interactiveHint={false}
         />
-        <div className="flex items-center justify-between px-1 py-1 text-[10px] font-mono text-[#B7F76B]/85">
+        <div className="flex items-center justify-between px-1 py-1 text-[10px] font-mono text-[#B6CDB4]">
           <span>Tap Head to Pat · Tap Leaves to Wiggle</span>
           <button
             type="button"
@@ -149,9 +149,9 @@ export const GreenyAssistantPanel: React.FC<GreenyAssistantPanelProps> = ({
                 language: customization.language === 'en' ? 'ta' : 'en',
               })
             }
-            className="text-[#00C878] hover:underline font-bold"
+            className="text-[#00D69A] hover:text-[#C7F36B] hover:underline font-bold cursor-pointer whitespace-nowrap shrink-0"
           >
-            Lang: {customization.language === 'en' ? 'English (Switch to தமிழ்)' : 'தமிழ் (Switch to EN)'}
+            Lang: {customization.language === 'en' ? 'English (தமிழ்)' : 'தமிழ் (EN)'}
           </button>
         </div>
       </div>
@@ -174,6 +174,7 @@ export const GreenyAssistantPanel: React.FC<GreenyAssistantPanelProps> = ({
           onSendMessage={onSendMessage}
           onStartVoiceInput={onStartVoiceInput}
           isListening={isListening}
+          isThinking={animationState === 'THINKING'}
           voiceEnabled={customization.voiceEnabled}
           onToggleVoice={() => onUpdateCustomization({ voiceEnabled: !customization.voiceEnabled })}
           onReplayLastVoice={onReplayLastVoice}

@@ -7,6 +7,7 @@ export const users = pgTable('users', {
   email: text('email').notNull(),
   displayName: text('display_name').default('Botanist'),
   role: text('role').default('user').notNull(),
+  demoSeeded: boolean('demo_seeded').default(false).notNull(),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -29,6 +30,9 @@ export const userPlants = pgTable('user_plants', {
   heightCm: real('height_cm').default(45),
   notes: text('notes').default(''),
   imageUrl: text('image_url').default(''),
+  waterLogJson: text('water_log_json').default('[]'),
+  fertilizerLogJson: text('fertilizer_log_json').default('[]'),
+  photoGalleryJson: text('photo_gallery_json').default('[]'),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -49,6 +53,8 @@ export const plantDiagnoses = pgTable('plant_diagnoses', {
   recommendations: text('recommendations').notNull(),
   prevention: text('prevention').notNull(),
   imageUrl: text('image_url').default(''),
+  imagesJson: text('images_json').default('[]'),
+  qualityStatus: text('quality_status').default('Verified'),
   reportJson: text('report_json').default('{}'),
   scannedDate: text('scanned_date').default('2026-11-12'),
   isConfirmed: boolean('is_confirmed').default(false).notNull(),
@@ -126,6 +132,19 @@ export const gardenDesigns = pgTable('garden_designs', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+export const aiToolRuns = pgTable('ai_tool_runs', {
+  id: serial('id').primaryKey(),
+  userUid: text('user_uid').notNull(),
+  toolId: text('tool_id').notNull(),
+  toolName: text('tool_name').notNull(),
+  plantId: integer('plant_id'),
+  plantName: text('plant_name').default(''),
+  inputSummary: text('input_summary').notNull(),
+  resultJson: text('result_json').notNull(),
+  modelUsed: text('model_used').default('gemini-4-hydrogen').notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
 export const communityPosts = pgTable('community_posts', {
   id: serial('id').primaryKey(),
   userUid: text('user_uid').notNull(),
@@ -162,6 +181,23 @@ export const marketplaceOrders = pgTable('marketplace_orders', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
+export const botanicalImageOverrides = pgTable('botanical_image_overrides', {
+  plantId: text('plant_id').primaryKey(),
+  scientificName: text('scientific_name').notNull(),
+  imageUrl: text('image_url').notNull(),
+  photographer: text('photographer').default('').notNull(),
+  source: text('source').default('').notNull(),
+  license: text('license').default('').notNull(),
+  sourceUrl: text('source_url').default('').notNull(),
+  verificationStatus: text('verification_status').default('verified').notNull(),
+  verificationNotes: text('verification_notes').default('').notNull(),
+  width: integer('width'),
+  height: integer('height'),
+  updatedBy: text('updated_by').default('admin').notNull(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 export const usersRelations = relations(users, ({ many }) => ({
   plants: many(userPlants),
 }));
+

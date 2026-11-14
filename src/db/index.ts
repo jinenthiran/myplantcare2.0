@@ -4,6 +4,7 @@ import * as schema from './schema.ts';
 
 declare global {
   var _postgresPool: Pool | undefined;
+  var _schemaReadyPromise: Promise<void> | undefined;
 }
 
 export const createPool = () => {
@@ -27,3 +28,26 @@ export const createPool = () => {
 const pool = createPool();
 
 export const db = drizzle(pool, { schema });
+
+export async function ensureDatabaseSchema(): Promise<void> {
+  if (!global._schemaReadyPromise) {
+    global._schemaReadyPromise = (async () => {
+      try {
+        await pool.query(`
+          UPDATE users u
+          SET demo_seeded = TRUE
+          WHERE demo_seeded = FALSE
+            AND (
+              EXISTS (SELECT 1 FROM user_plants p WHERE p.user_uid = u.uid)
+              OR EXISTS (SELECT 1 FROM plant_diagnoses d WHERE d.user_uid = u.uid)
+              OR EXISTS (SELECT 1 FROM ai_tool_runs r WHERE r.user_uid = u.uid)
+            );
+        `);
+      } catch (error) {
+        console.warn('Workspace seed flag check skipped:', error instanceof Error ? error.message : error);
+        global._schemaReadyPromise = undefined;
+      }
+    })();
+  }
+  return global._schemaReadyPromise;
+}
